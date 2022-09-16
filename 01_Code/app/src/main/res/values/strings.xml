@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">Screentrackr</string>
+    <string name="value_background_color">Background color</string>
+    <string name="value_marker_color">Marker color</string>
+    <string name="value_marker_density">Marker denisty</string>
+    <string name="value_marker_size">Marker size</string>
+    <string name="value_marker_type">Marker type</string>
+    <string name="value_edge_marker">Edge markers</string>
+
+    <string name="button_text_start">Start</string>
+    <string name="text_overall_bright">Overall brightness:</string>
+
+    <string-array name="marker_type_array">
+        <item>Pie</item>
+        <item>Circle</item>
+        <item>Triangle</item>
+        <item>Cross</item>
+    </string-array>
+
+    <string-array name="edge_markers_array">
+        <item>None</item>
+        <item>Corner</item>
+        <item>Semicircle</item>
+    </string-array>
+</resources>
