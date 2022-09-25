@@ -8,160 +8,168 @@
     android:layout_marginVertical="@dimen/activity_horizontal_margin"
     tools:context=".MainActivity">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:divider="@color/black"
-        android:orientation="vertical"
-        tools:layout_editor_absoluteX="0dp"
-        tools:layout_editor_absoluteY="0dp">
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="286dp"
+        android:layout_height="35dp"
+        android:textAlignment="center"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/inapplogo"
+        tools:ignore="ContentDescription" />
 
-        <ImageView
-            android:id="@+id/imageView"
-            android:layout_width="311dp"
-            android:layout_height="31dp"
-            android:layout_gravity="center"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="20dp"
-            android:textAlignment="center"
-            app:srcCompat="@drawable/inapplogo"
-            tools:ignore="ContentDescription" />
-
-        <TableLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:divider="@color/black"
-            android:showDividers="middle"
-            android:stretchColumns="*">
-
-            <TableRow
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="10dp">
-
-                <TextView
-                    android:id="@+id/text_background_color"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
-                    android:text="@string/value_background_color" />
-
-                <Spinner
-                    android:id="@+id/spinner"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-            </TableRow>
-
-            <TableRow
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="10dp">
-
-                <TextView
-                    android:id="@+id/text_marker_color"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
-                    android:text="@string/value_marker_color" />
-            </TableRow>
-
-            <TableRow
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="10dp">
-
-                <TextView
-                    android:id="@+id/text_marker_density"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
-                    android:text="@string/value_marker_density" />
-
-                <Spinner
-                    android:id="@+id/spinner_marker_density"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-            </TableRow>
-
-            <TableRow
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="10dp">
-
-                <TextView
-                    android:id="@+id/text_marker_size"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
-                    android:text="@string/value_marker_size" />
-
-                <Spinner
-                    android:id="@+id/spinner_marker_size"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-            </TableRow>
-
-            <TableRow
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="10dp">
-
-                <TextView
-                    android:id="@+id/text_marker_type"
-                    android:layout_width="243dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
-                    android:text="@string/value_marker_type" />
-
-                <Spinner
-                    android:id="@+id/spinner_marker_type"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-            </TableRow>
-
-            <TableRow
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="10dp">
-
-                <TextView
-                    android:id="@+id/text_edge_marker"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
-                    android:text="@string/value_edge_marker" />
-
-                <Spinner
-                    android:id="@+id/spinner_edge_marker"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:backgroundTint="#CDADAD"
-                    android:defaultFocusHighlightEnabled="true"
-                    android:dropDownWidth="match_parent" />
-            </TableRow>
-        </TableLayout>
-
-        <SeekBar
-            android:id="@+id/seekBar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-    </LinearLayout>
 
     <Button
-        android:id="@+id/button"
+        android:id="@+id/button_start"
         android:layout_width="match_parent"
         android:layout_height="65dp"
         android:text="@string/button_text_start"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/footer"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
 
+    <TextView
+        android:id="@+id/footer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="@string/footerLink"
+        android:textSize="11sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TableLayout
+        android:id="@+id/tableLayout"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:stretchColumns="0"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imageView">
+
+        <TableRow>
+
+            <TextView
+                android:id="@+id/text_background_color"
+                android:text="@string/value_background_color"
+                android:textSize="18sp" />
+
+            <Button
+                android:id="@+id/buttonBackgroundColor"
+                tools:ignore="SpeakableTextPresentCheck" />
+        </TableRow>
+
+        <TableRow>
+
+            <TextView
+                android:id="@+id/text_marker_color"
+                android:text="@string/value_marker_color"
+                android:textSize="18sp" />
+
+            <Button
+                android:id="@+id/buttonMarkerColor"
+                tools:ignore="SpeakableTextPresentCheck" />
+        </TableRow>
+
+        <TableRow android:gravity="center_vertical">
+
+
+            <TextView
+                android:id="@+id/text_marker_density"
+                android:text="@string/value_marker_density"
+                android:textSize="18sp" />
+
+            <Spinner
+                android:id="@+id/spinner_marker_density"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginTop="3dp"
+                android:layout_marginBottom="3dp"
+                android:popupBackground="@color/background"
+                android:background="@drawable/spinner_background"
+                android:textAlignment="center" />
+        </TableRow>
+
+        <TableRow android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/text_marker_size"
+                android:text="@string/value_marker_size"
+                android:textSize="18sp" />
+
+            <Spinner
+                android:id="@+id/spinner_marker_size"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginTop="3dp"
+                android:layout_marginBottom="3dp"
+                android:background="@drawable/spinner_background"
+                android:popupBackground="@color/background"
+                android:textAlignment="center"
+                tools:ignore="SpeakableTextPresentCheck" />
+        </TableRow>
+
+        <TableRow android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/text_marker_type"
+                android:text="@string/value_marker_type"
+                android:textSize="18sp" />
+
+            <Spinner
+                android:id="@+id/spinner_marker_type"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginTop="3dp"
+                android:layout_marginBottom="3dp"
+                android:popupBackground="@color/background"
+                android:background="@drawable/spinner_background"
+                android:textAlignment="center" />
+        </TableRow>
+
+        <TableRow android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/text_edge_marker"
+                android:text="@string/value_edge_marker"
+                android:textSize="18sp" />
+
+            <Spinner
+                android:id="@+id/spinner_edge_marker"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginTop="3dp"
+                android:layout_marginBottom="3dp"
+                android:popupBackground="@color/background"
+                android:background="@drawable/spinner_background"
+                android:textAlignment="center" />
+        </TableRow>
+    </TableLayout>
+
+    <include
+        layout="@layout/activity_trackingscreen"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="15dp"
+        android:layout_marginTop="15dp"
+        android:layout_marginEnd="15dp"
+        android:layout_marginBottom="15dp"
+        app:layout_constraintBottom_toTopOf="@+id/button_start"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tableLayout" />
+    <!--
+
+            <SeekBar
+                android:id="@+id/seekBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+        -->
 </androidx.constraintlayout.widget.ConstraintLayout>
