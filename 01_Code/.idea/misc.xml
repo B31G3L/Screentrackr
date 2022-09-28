@@ -16,7 +16,7 @@
         <entry key="app/src/main/res/drawable/ic_marker_triangle.xml" value="0.178" />
         <entry key="app/src/main/res/drawable/spinner_background.xml" value="0.177" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.375" />
-        <entry key="app/src/main/res/layout/activity_trackingscreen.xml" value="0.375" />
+        <entry key="app/src/main/res/layout/activity_trackingscreen.xml" value="0.25" />
         <entry key="app/src/main/res/layout/tracking_screen.xml" value="0.16742654508611957" />
       </map>
     </option>

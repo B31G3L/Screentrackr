@@ -77,7 +77,7 @@ class Trackingscreen : AppCompatActivity() {
         }
         // get values
         val trackingValues: TrackingValues? = intent.getSerializableExtra("trackingValues") as TrackingValues?
-        val utiles:Utilies = Utilies()
+        val utiles:Utilities = Utilities()
         // set background
         if (trackingValues != null) {
             previewTrackingBackground.setBackgroundColor(Color.parseColor(trackingValues.backgroundColor))

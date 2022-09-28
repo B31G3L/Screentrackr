@@ -50,7 +50,7 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
 
 
     private lateinit var  trackingValues: TrackingValues
-    private lateinit var  utilies: Utilies
+    private lateinit var  utilities: Utilities
 
 
 
@@ -60,7 +60,7 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
         setContentView(R.layout.activity_main)
 
         trackingValues = TrackingValues();
-        utilies = Utilies();
+        utilities = Utilities();
 
         buttonStart = findViewById(R.id.button_start)
         buttonBackgroundColor = findViewById(R.id.buttonBackgroundColor)
@@ -247,20 +247,20 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
         when (trackingValues.markerDensity) {
             "0" -> {}
             "1" -> {
-                utilies.createMarker(trackingPointList1, trackingValues)
+                utilities.createMarker(trackingPointList1, trackingValues)
             }
             "2" -> {
-                utilies.createMarker(trackingPointList1, trackingValues)
-                utilies.createMarker(trackingPointList2, trackingValues)
+                utilities.createMarker(trackingPointList1, trackingValues)
+                utilities.createMarker(trackingPointList2, trackingValues)
             }
             "3" -> {
-                utilies.createMarker(trackingPointList1, trackingValues)
-                utilies.createMarker(trackingPointList2, trackingValues)
-                utilies.createMarker(trackingPointList3, trackingValues)
+                utilities.createMarker(trackingPointList1, trackingValues)
+                utilities.createMarker(trackingPointList2, trackingValues)
+                utilities.createMarker(trackingPointList3, trackingValues)
             }
         }
         if (trackingValues.edgeMarker!="None"){
-            utilies.createEdgeMarker(trackingPointListE, trackingValues)
+            utilities.createEdgeMarker(trackingPointListE, trackingValues)
         }
     }
 

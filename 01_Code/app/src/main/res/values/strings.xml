@@ -9,7 +9,7 @@
 
     <string name="button_text_start">Start</string>
     <string name="text_overall_bright">Overall brightness:</string>
-    <string name="footerLink">© 2022 <a href="https://b31g3l.github.io/">Beigel</a>\nin cooperation with <a href="https://www.overmind-studios.de/">Overmind Studios</a></string>
+    <string name="footerLink">© 2022 <a href="https://b31g3l.github.io/">Beigel</a>\nin cooperation with <a href="https://www.overmind-studios.de/">Overmind Studios</a>\nalso available in the <a href="https://www.overmind-studios.de/screentrackr">browser</a></string>
 
     <string-array name="marker_type_array">
         <item>Pie</item>

@@ -1,16 +1,13 @@
 package com.beigel.screenTracker
 
 import android.graphics.Color
-import android.graphics.ColorMatrix
-import android.graphics.ColorMatrixColorFilter
 import android.widget.ImageView
 
 
-class Utilies {
+class Utilities {
 
      fun createMarker(trackingPointList: ArrayList<ImageView>, trackingValues: TrackingValues){
         var markerType :Int = R.drawable.ic_marker_cross
-        val markerSize: Int = getMarkerSize(trackingValues.markerSize)
         when (trackingValues.markerType) {
             "Pie" -> {
                 markerType = R.drawable.ic_marker_pie
@@ -27,49 +24,14 @@ class Utilies {
         }
 
         for(x in trackingPointList){
-          //foto is my ImageView
-
             x.setImageResource(markerType)
-            x.layoutParams.height = markerSize
-            x.layoutParams.width = markerSize
+            x.layoutParams.height = getMarkerSize(trackingValues.markerSize)
+            x.layoutParams.width = getMarkerSize(trackingValues.markerSize)
             x.setColorFilter( Color.parseColor(trackingValues.markerColor))
-//and below is the brightIt func
-
         }
     }
-    private fun brightIt(fb: Int): ColorMatrixColorFilter? {
-        val cmB = ColorMatrix()
-        cmB.set(
-            floatArrayOf(
-                182f,
-                0f,
-                0f,
-                0f,
-                fb.toFloat(),
-                0f,
-                47f,
-                0f,
-                1f,
-                fb.toFloat(),
-                0f,
-                0f,
-                47f,
-                0f,
-                fb.toFloat(),
-                0f,
-                0f,
-                0f,
-                1f,
-                0f
-            )
-        )
-        val colorMatrix = ColorMatrix()
-        colorMatrix.set(cmB)
-        //Canvas c = new Canvas(b2);
-//Paint paint = new Paint();
-        //paint.setColorFilter(f);
-        return ColorMatrixColorFilter(colorMatrix)
-    }
+
+
        private  fun getMarkerSize(markerSize: String): Int {
             when (markerSize) {
                 "1" -> {
@@ -93,7 +55,6 @@ class Utilies {
 
     fun createEdgeMarker(trackingPointListE: ArrayList<ImageView>, trackingValues: TrackingValues) {
         var edgeMarker :Int = R.drawable.ic_marker_cross_edge
-        val markerSize: Int = getMarkerSize(trackingValues.markerSize)
         when (trackingValues.edgeMarker) {
             "Corner" -> {
                 edgeMarker = R.drawable.ic_marker_cross_edge

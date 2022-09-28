@@ -9,6 +9,4 @@ class TrackingValues: Serializable {
     var markerSize: String = "1"
     var markerType: String = "Cross"
     var edgeMarker: String = "None"
-
-
 }

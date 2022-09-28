@@ -12,6 +12,7 @@
         android:id="@+id/imageView"
         android:layout_width="286dp"
         android:layout_height="35dp"
+        android:layout_marginTop="16dp"
         android:textAlignment="center"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -46,14 +47,14 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="24dp"
         android:layout_marginEnd="8dp"
         android:stretchColumns="0"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/imageView">
 
-        <TableRow>
+        <TableRow android:layout_height="48dp">
 
             <TextView
                 android:id="@+id/text_background_color"
@@ -74,6 +75,7 @@
 
             <Button
                 android:id="@+id/buttonMarkerColor"
+                android:layout_height="48dp"
                 tools:ignore="SpeakableTextPresentCheck" />
         </TableRow>
 
@@ -88,12 +90,13 @@
             <Spinner
                 android:id="@+id/spinner_marker_density"
                 android:layout_width="wrap_content"
-                android:layout_height="40dp"
+                android:layout_height="48dp"
                 android:layout_marginTop="3dp"
                 android:layout_marginBottom="3dp"
-                android:popupBackground="@color/background"
                 android:background="@drawable/spinner_background"
-                android:textAlignment="center" />
+                android:popupBackground="@color/background"
+                android:textAlignment="center"
+                tools:ignore="SpeakableTextPresentCheck" />
         </TableRow>
 
         <TableRow android:gravity="center_vertical">
@@ -106,7 +109,7 @@
             <Spinner
                 android:id="@+id/spinner_marker_size"
                 android:layout_width="wrap_content"
-                android:layout_height="40dp"
+                android:layout_height="48dp"
                 android:layout_marginTop="3dp"
                 android:layout_marginBottom="3dp"
                 android:background="@drawable/spinner_background"
@@ -125,12 +128,13 @@
             <Spinner
                 android:id="@+id/spinner_marker_type"
                 android:layout_width="wrap_content"
-                android:layout_height="40dp"
+                android:layout_height="48dp"
                 android:layout_marginTop="3dp"
                 android:layout_marginBottom="3dp"
-                android:popupBackground="@color/background"
                 android:background="@drawable/spinner_background"
-                android:textAlignment="center" />
+                android:popupBackground="@color/background"
+                android:textAlignment="center"
+                tools:ignore="SpeakableTextPresentCheck" />
         </TableRow>
 
         <TableRow android:gravity="center_vertical">
@@ -143,12 +147,13 @@
             <Spinner
                 android:id="@+id/spinner_edge_marker"
                 android:layout_width="wrap_content"
-                android:layout_height="40dp"
+                android:layout_height="48dp"
                 android:layout_marginTop="3dp"
                 android:layout_marginBottom="3dp"
-                android:popupBackground="@color/background"
                 android:background="@drawable/spinner_background"
-                android:textAlignment="center" />
+                android:popupBackground="@color/background"
+                android:textAlignment="center"
+                tools:ignore="SpeakableTextPresentCheck" />
         </TableRow>
     </TableLayout>
 
@@ -156,20 +161,13 @@
         layout="@layout/activity_trackingscreen"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginStart="15dp"
-        android:layout_marginTop="15dp"
-        android:layout_marginEnd="15dp"
-        android:layout_marginBottom="15dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="32dp"
+        android:layout_marginBottom="32dp"
         app:layout_constraintBottom_toTopOf="@+id/button_start"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tableLayout" />
-    <!--
 
-            <SeekBar
-                android:id="@+id/seekBar"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-
-        -->
 </androidx.constraintlayout.widget.ConstraintLayout>
