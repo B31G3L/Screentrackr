@@ -1,93 +1,97 @@
 # Screentrackr
 
-## Übersicht
-Screentrackr ist eine Android-Anwendung zur Anzeige anpassbarer visueller Marker auf dem Bildschirm. Diese Marker sind besonders nützlich für:
-- Videoaufnahmen und Screencasts
-- Tracking-Referenzpunkte für Postproduktion
-- Visuelle Guides für Präsentationen und Tutorials
+Screentrackr ist eine Android-App, mit der man visuelle Marker auf dem Bildschirm platzieren kann. Dies ist besonders nützlich für Post-Produktion, Video-Tutorials und Screen-Recordings.
+
+![Screentrackr Logo](app/src/main/res/drawable/inapplogo.png)
 
 ## Features
-- Anpassbare Marker-Farben
-- Multiple Marker-Typen (Kreuz, Kreis, Dreieck, Tortenstück)
-- Einstellbare Marker-Dichte und -Größe
-- Optionale Eckmarker
-- Benutzerdefinierbare Hintergrundfarbe
-- Vollbildmodus für ungestörte Nutzung
 
-## Screenshots
-![Hauptbildschirm](screenshots/main_screen.png)
-![Tracking-Bildschirm](screenshots/tracking_screen.png)
+- Anpassbare Marker-Typen (Kreuz, Kreis, Dreieck, Tortenstück)
+- Einstellbare Marker-Dichte
+- Verschiedene Marker-Größen
+- Benutzerdefinierte Marker- und Hintergrundfarben
+- Eckmarker-Optionen
+- Vollbildmodus für ungestörte Aufnahmen
+
+## Voraussetzungen
+
+- Android 8.0 (API Level 26) oder höher
+- Android Studio 4.0 oder höher (für Entwicklung)
 
 ## Installation
-### Anforderungen
-- Android 8.0 (API-Level 26) oder höher
-- Mindestens 10 MB freier Speicherplatz
 
-### Google Play Store
-Die App ist im [Google Play Store](https://play.google.com/store/apps/details?id=com.beigel.screenTracker) verfügbar.
+### Aus dem Play Store
+1. Öffnen Sie den Google Play Store
+2. Suchen Sie nach "Screentrackr"
+3. Installieren Sie die App
 
-### Manuelles Bauen
-1. Klonen Sie das Repository:
-   ```
+### Manuell für Entwickler
+1. Klonen Sie dieses Repository:
+   ```bash
    git clone https://github.com/b31g3l/screentrackrApp.git
    ```
 2. Öffnen Sie das Projekt in Android Studio
-3. Bauen Sie die APK mit `Build > Build Bundle(s) / APK(s) > Build APK(s)`
-4. Die APK finden Sie unter `app/build/outputs/apk/debug/app-debug.apk`
+3. Bauen und installieren Sie die App auf Ihrem Gerät
 
-## Verwendung
+## Nutzung
+
 1. Starten Sie die App
-2. Passen Sie die Marker-Einstellungen an:
-   - Hintergrundfarbe
-   - Marker-Farbe
-   - Marker-Dichte (0-3)
-   - Marker-Größe (1-5)
-   - Marker-Typ (Kreuz, Kreis, Dreieck, Tortenstück)
-   - Eckmarker (Keine, Ecken, Halbkreise)
-3. Drücken Sie auf "Start", um in den Vollbildmodus zu wechseln
-4. Zum Beenden den Bildschirm von unten nach oben wischen
+2. Konfigurieren Sie die Marker nach Ihren Wünschen:
+   - Wählen Sie die Hintergrundfarbe
+   - Wählen Sie die Marker-Farbe
+   - Stellen Sie die Marker-Dichte ein (0-3)
+   - Wählen Sie die Marker-Größe (1-5)
+   - Wählen Sie den Marker-Typ (Kreuz, Kreis, Dreieck, Tortenstück)
+   - Aktivieren Sie bei Bedarf Eckmarker
+3. Drücken Sie auf "Start", um den Vollbildmodus zu aktivieren
+4. Wischen Sie von unten nach oben, um zum Einstellungsbildschirm zurückzukehren
 
-## Konfiguration
-Die App speichert Ihre Einstellungen nicht zwischen den Sitzungen. Jedes Mal, wenn Sie die App starten, werden die Standardeinstellungen geladen.
+## Projektstruktur
+
+```
+com.beigel.screenTracker/
+├── MainActivity.java       # Hauptbildschirm mit Einstellungen
+├── Trackingscreen.java     # Vollbildmodus zur Anzeige der Marker
+├── TrackingValues.java     # Datenmodell für die Einstellungen
+└── Utilities.java          # Hilfsfunktionen zur Marker-Erstellung
+```
+
+## Beitragen
+
+Wir freuen uns über Beiträge zur Verbesserung von Screentrackr! So können Sie helfen:
+
+1. Forken Sie das Repository
+2. Erstellen Sie einen Feature-Branch (`git checkout -b feature/neue-funktion`)
+3. Committen Sie Ihre Änderungen (`git commit -am 'Neue Funktion hinzugefügt'`)
+4. Pushen Sie den Branch (`git push origin feature/neue-funktion`)
+5. Erstellen Sie einen Pull Request
+
+
+## Verwendete Bibliotheken
+
+- [ColorPickerView](https://github.com/skydoves/ColorPickerView) - Für die Farbauswahl
+- [AndroidX](https://developer.android.com/jetpack/androidx) - Für moderne Android-Entwicklung
 
 ## Für Entwickler
 
-### Projektstruktur
-```
-com.beigel.screenTracker/
-├── MainActivity.java         # Haupteinstellungsbildschirm
-├── Trackingscreen.java       # Vollbild-Tracking-Ansicht
-├── TrackingValues.java       # Datenmodell für Tracking-Einstellungen
-└── Utilities.java            # Hilfsfunktionen für UI-Erstellung
-```
+### Build-Typen
 
-### Bauen und Testen
-Das Projekt verwendet Gradle als Build-System:
-```
-./gradlew assembleDebug    # Debug-APK erstellen
-./gradlew installDebug     # Debug-APK auf verbundenem Gerät installieren
-./gradlew test             # Unit-Tests ausführen
-```
+- `debug` - Für Entwicklung und Tests
+- `release` - Optimierte Version für die Veröffentlichung
 
-### Build-Konfigurationen
-- `debug`: Entwicklungsversion mit Debug-Symbolen
-- `release`: Optimierte, signierte Version für Veröffentlichung
+### Ordnerstruktur
 
-## Mitwirken
-Beiträge zum Projekt sind willkommen! Bitte folgen Sie diesen Schritten:
-1. Forken Sie das Repository
-2. Erstellen Sie einen Feature-Branch (`git checkout -b feature/amazing-feature`)
-3. Committen Sie Ihre Änderungen (`git commit -m 'Füge eine tolle Funktion hinzu'`)
-4. Pushen Sie den Branch (`git push origin feature/amazing-feature`)
-5. Öffnen Sie einen Pull Request
+- `01_Code/` - Enthält den Android-Projektcode
+- `02_KEYSTORE/` - Enthält Signing-Informationen (wird nicht im Repository gespeichert)
+
+### Git-Einstellungen
+
+Wir verwenden eine angepasste `.gitignore`-Datei, um sicherzustellen, dass keine generierten Dateien, Schlüssel oder IDE-spezifischen Konfigurationen im Repository landen.
 
 ## Lizenz
-Dieses Projekt ist unter der MIT-Lizenz lizenziert - siehe die [LICENSE](LICENSE) Datei für Details.
+
+Dieses Projekt ist unter der MIT-Lizenz lizenziert. Weitere Details finden Sie in der [LICENSE](LICENSE)-Datei.
 
 ## Kontakt
-Entwickler: [Beigel](https://b31g3l.github.io/)
-In Zusammenarbeit mit: [Overmind Studios](https://www.overmind-studios.de/)
 
-## Danksagungen
-- [ColorPickerView](https://github.com/skydoves/ColorPickerView) für die Farbauswahl-Komponente
-- [Android Material Components](https://github.com/material-components/material-components-android) für die UI-Elemente
+Entwickelt von [Beigel](https://b31g3l.github.io/) in Zusammenarbeit mit [Overmind Studios](https://www.overmind-studios.de/)

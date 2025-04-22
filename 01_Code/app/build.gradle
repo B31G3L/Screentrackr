@@ -15,7 +15,7 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        // Ressourcen- und Code-Optimierungen
+        // Vector-Drawables aktivieren
         vectorDrawables.useSupportLibrary = true
     }
 
@@ -23,58 +23,37 @@ android {
         debug {
             applicationIdSuffix ".debug"
             debuggable true
-            minifyEnabled false
         }
 
         release {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-
-            // Signieren der App
-            signingConfig signingConfigs.debug  // Ändern Sie dies zu Ihrem eigenen Signierungsconfig
         }
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
     }
 
     buildFeatures {
-        viewBinding true  // View Binding aktivieren für typsicheren Zugriff auf Views
-    }
-
-    // Konfiguration für Lint
-    lint {
-        abortOnError false
-        warningsAsErrors false
-        checkReleaseBuilds true
+        viewBinding true  // View Binding aktivieren
     }
 }
 
-// Abhängigkeiten in Gruppen organisieren
 dependencies {
-    // Android Core Libraries
-    implementation 'androidx.core:core:1.16.0'
-    implementation 'androidx.appcompat:appcompat:1.7.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
+    // Core-Bibliotheken
+    implementation 'androidx.core:core:1.10.1'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 
-    // UI Components
-    implementation 'com.google.android.material:material:1.12.0'
+    // UI-Komponenten
+    implementation 'com.google.android.material:material:1.9.0'
     implementation "com.github.skydoves:colorpickerview:2.3.0"
 
-    // Optionale Abhängigkeiten für zukünftige Erweiterungen
-    // Lifecycle & ViewModel
-    // implementation 'androidx.lifecycle:lifecycle-viewmodel:2.6.2'
-    // implementation 'androidx.lifecycle:lifecycle-livedata:2.6.2'
-
-    // Room für Datenspeicherung (falls gewünscht)
-    // implementation 'androidx.room:room-runtime:2.6.1'
-    // annotationProcessor 'androidx.room:room-compiler:2.6.1'
-
-    // Testing
+    // Test-Bibliotheken
     testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 }
