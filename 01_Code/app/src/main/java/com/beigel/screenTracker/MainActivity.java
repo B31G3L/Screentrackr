@@ -3,83 +3,83 @@ package com.beigel.screenTracker;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.view.GestureDetector;
-import android.view.MotionEvent;
+import android.text.method.LinkMovementMethod;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.view.GestureDetectorCompat;
-import androidx.core.view.WindowCompat;
-import androidx.core.view.WindowInsetsCompat;
-import androidx.core.view.WindowInsetsControllerCompat;
+import androidx.constraintlayout.widget.ConstraintLayout;
 
-import com.beigel.screenTracker.databinding.ActivityTrackingscreenBinding;
+import com.skydoves.colorpickerview.ColorEnvelope;
+import com.skydoves.colorpickerview.ColorPickerDialog;
+import com.skydoves.colorpickerview.listeners.ColorEnvelopeListener;
 
 import java.util.ArrayList;
 
 /**
- * Vollbildschirm-Tracking-Ansicht
- * Zeigt Marker gemäß den Benutzereinstellungen an
+ * Hauptaktivität der App mit Einstellungsoptionen und Vorschau
  */
-public class Trackingscreen extends AppCompatActivity implements GestureDetector.OnGestureListener {
+public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
-    private ActivityTrackingscreenBinding binding;
-    private TrackingValues trackingValues;
-    private GestureDetectorCompat gestureDetector;
+    private Button buttonBackgroundColor;
+    private Button buttonMarkerColor;
+    private Button buttonStart;
+    private TextView footerText;
+    private ConstraintLayout previewTrackingBackground;
+
+    private Spinner spinnerMarkerDensity;
+    private Spinner spinnerMarkerSize;
+    private Spinner spinnerMarkerType;
+    private Spinner spinnerEdgeMarkers;
 
     private ArrayList<ImageView> trackingPointList1;
     private ArrayList<ImageView> trackingPointList2;
     private ArrayList<ImageView> trackingPointList3;
     private ArrayList<ImageView> trackingPointListE;
 
+    private TrackingValues trackingValues;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
-        // View Binding initialisieren
-        binding = ActivityTrackingscreenBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
+        // TrackingValues initialisieren
+        trackingValues = Utilities.loadSettings(this);
 
-        // ActionBar ausblenden
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.hide();
-        }
-
-        // Systemleisten ausblenden für Vollbildmodus
-        hideSystemBars();
-
-        // Gesten-Erkennung für Navigation
-        gestureDetector = new GestureDetectorCompat(this, this);
-
-        // Marker-Listen initialisieren
+        // UI-Elemente initialisieren
+        initializeViews();
         initializeMarkerLists();
+        setupSpinners();
+        setupButtons();
+        setupActivityLink();
 
-        // Tracking-Werte aus dem Intent laden
-        loadTrackingValues();
-
-        // Tracking-Ansicht erstellen
-        setupTracking();
+        // Vorschau aktualisieren
+        updateColorButtons();
+        createPreview();
     }
 
     /**
-     * Blendet die Systemleisten aus für einen echten Vollbildmodus
+     * Initialisiert alle UI-Elemente
      */
-    private void hideSystemBars() {
-        WindowInsetsControllerCompat windowInsetsController =
-                WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+    private void initializeViews() {
+        buttonStart = findViewById(R.id.button_start);
+        buttonBackgroundColor = findViewById(R.id.buttonBackgroundColor);
+        buttonMarkerColor = findViewById(R.id.buttonMarkerColor);
+        footerText = findViewById(R.id.footer);
 
-        if (windowInsetsController != null) {
-            // Systemleisten können durch Wischen wieder eingeblendet werden
-            windowInsetsController.setSystemBarsBehavior(
-                    WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+        previewTrackingBackground = findViewById(R.id.trackingBackground);
 
-            // Alle Systemleisten ausblenden
-            windowInsetsController.hide(WindowInsetsCompat.Type.systemBars());
-        }
+        spinnerMarkerDensity = findViewById(R.id.spinner_marker_density);
+        spinnerMarkerSize = findViewById(R.id.spinner_marker_size);
+        spinnerMarkerType = findViewById(R.id.spinner_marker_type);
+        spinnerEdgeMarkers = findViewById(R.id.spinner_edge_marker);
     }
 
     /**
@@ -92,66 +92,239 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
         trackingPointListE = new ArrayList<>();
 
         // Gruppe 1
-        trackingPointList1.add(binding.trackingPoint11);
-        trackingPointList1.add(binding.trackingPoint12);
-        trackingPointList1.add(binding.trackingPoint13);
-        trackingPointList1.add(binding.trackingPoint14);
-        trackingPointList1.add(binding.trackingPoint15);
+        trackingPointList1.add(findViewById(R.id.trackingPoint_1_1));
+        trackingPointList1.add(findViewById(R.id.trackingPoint_1_2));
+        trackingPointList1.add(findViewById(R.id.trackingPoint_1_3));
+        trackingPointList1.add(findViewById(R.id.trackingPoint_1_4));
+        trackingPointList1.add(findViewById(R.id.trackingPoint_1_5));
 
         // Gruppe 2
-        trackingPointList2.add(binding.trackingPoint21);
-        trackingPointList2.add(binding.trackingPoint22);
-        trackingPointList2.add(binding.trackingPoint23);
-        trackingPointList2.add(binding.trackingPoint24);
+        trackingPointList2.add(findViewById(R.id.trackingPoint_2_1));
+        trackingPointList2.add(findViewById(R.id.trackingPoint_2_2));
+        trackingPointList2.add(findViewById(R.id.trackingPoint_2_3));
+        trackingPointList2.add(findViewById(R.id.trackingPoint_2_4));
 
         // Gruppe 3
-        trackingPointList3.add(binding.trackingPoint31);
-        trackingPointList3.add(binding.trackingPoint32);
-        trackingPointList3.add(binding.trackingPoint33);
-        trackingPointList3.add(binding.trackingPoint34);
+        trackingPointList3.add(findViewById(R.id.trackingPoint_3_1));
+        trackingPointList3.add(findViewById(R.id.trackingPoint_3_2));
+        trackingPointList3.add(findViewById(R.id.trackingPoint_3_3));
+        trackingPointList3.add(findViewById(R.id.trackingPoint_3_4));
 
         // Eckmarker
-        trackingPointListE.add(binding.trackingPointE1);
-        trackingPointListE.add(binding.trackingPointE2);
-        trackingPointListE.add(binding.trackingPointE3);
-        trackingPointListE.add(binding.trackingPointE4);
+        trackingPointListE.add(findViewById(R.id.trackingPoint_E_1));
+        trackingPointListE.add(findViewById(R.id.trackingPoint_E_2));
+        trackingPointListE.add(findViewById(R.id.trackingPoint_E_3));
+        trackingPointListE.add(findViewById(R.id.trackingPoint_E_4));
     }
 
-    /**
-     * Lädt die Tracking-Einstellungen aus dem Intent
-     */
-    private void loadTrackingValues() {
-        // Tracking-Werte aus dem Intent extrahieren
-        trackingValues = (TrackingValues) getIntent().getSerializableExtra("trackingValues");
+    private void setupSpinners() {
+        // Spinner für Markerdichte
+        ArrayAdapter<CharSequence> densityAdapter = ArrayAdapter.createFromResource(
+                this, R.array.marker_density_array, android.R.layout.simple_spinner_item);
+        densityAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerMarkerDensity.setAdapter(densityAdapter);
+        spinnerMarkerDensity.setSelection(trackingValues.getMarkerDensity());
+        spinnerMarkerDensity.setOnItemSelectedListener(this);
 
-        // Fallback zu Standardwerten, falls keine Werte übergeben wurden
-        if (trackingValues == null) {
-            trackingValues = new TrackingValues();
+        // Spinner für Markertyp
+        ArrayAdapter<CharSequence> typeAdapter = ArrayAdapter.createFromResource(
+                this, R.array.marker_type_array, android.R.layout.simple_spinner_item);
+        typeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerMarkerType.setAdapter(typeAdapter);
+        spinnerMarkerType.setSelection(getMarkerTypePosition());
+        spinnerMarkerType.setOnItemSelectedListener(this);
+
+        // Spinner für Markergröße
+        ArrayAdapter<CharSequence> sizeAdapter = ArrayAdapter.createFromResource(
+                this, R.array.edge_size_array, android.R.layout.simple_spinner_item);
+        sizeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerMarkerSize.setAdapter(sizeAdapter);
+        spinnerMarkerSize.setSelection(trackingValues.getMarkerSize() - 1);
+        spinnerMarkerSize.setOnItemSelectedListener(this);
+
+        // Spinner für Eckmarker
+        ArrayAdapter<CharSequence> edgeAdapter = ArrayAdapter.createFromResource(
+                this, R.array.edge_markers_array, android.R.layout.simple_spinner_item);
+        edgeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerEdgeMarkers.setAdapter(edgeAdapter);
+        spinnerEdgeMarkers.setSelection(getEdgeMarkerPosition());
+        spinnerEdgeMarkers.setOnItemSelectedListener(this);
+    }
+
+    private int getMarkerTypePosition() {
+        TrackingValues.MarkerType type = trackingValues.getMarkerType();
+        switch (type) {
+            case PIE: return 0;
+            case CIRCLE: return 1;
+            case TRIANGLE: return 2;
+            case CROSS: return 3;
+            default: return 3;
         }
     }
 
-    /**
-     * Richtet die Tracking-Ansicht gemäß den Einstellungen ein
-     */
-    private void setupTracking() {
-        // Alle Marker zurücksetzen
-        resetAllMarkers();
-
-        // Hintergrundfarbe setzen
-        binding.trackingBackground.setBackgroundColor(
-                Color.parseColor(trackingValues.getBackgroundColor()));
-
-        // Marker entsprechend der ausgewählten Dichte erstellen
-        setupMarkers();
-
-        // Eckmarker erstellen, falls ausgewählt
-        setupEdgeMarkers();
+    private int getEdgeMarkerPosition() {
+        TrackingValues.EdgeMarkerType type = trackingValues.getEdgeMarker();
+        switch (type) {
+            case NONE: return 0;
+            case CORNER: return 1;
+            case SEMICIRCLE: return 2;
+            default: return 0;
+        }
     }
 
-    /**
-     * Setzt alle Marker zurück
-     */
-    private void resetAllMarkers() {
+    private void setupButtons() {
+        // Start-Button
+        buttonStart.setOnClickListener(v -> {
+            // Einstellungen speichern und Tracking-Screen starten
+            Utilities.saveSettings(this, trackingValues);
+            Toast.makeText(this, "Einstellungen gespeichert", Toast.LENGTH_SHORT).show();
+
+            Intent intent = new Intent(MainActivity.this, Trackingscreen.class);
+            intent.putExtra("trackingValues", trackingValues);
+            startActivity(intent);
+        });
+
+        // Farb-Buttons
+        buttonBackgroundColor.setOnClickListener(this::showBackgroundColorDialog);
+        buttonMarkerColor.setOnClickListener(this::showMarkerColorDialog);
+    }
+
+    private void setupActivityLink() {
+        footerText.setMovementMethod(LinkMovementMethod.getInstance());
+    }
+
+    private void updateColorButtons() {
+        buttonBackgroundColor.setBackgroundColor(Color.parseColor(trackingValues.getBackgroundColor()));
+        buttonMarkerColor.setBackgroundColor(Color.parseColor(trackingValues.getMarkerColor()));
+    }
+
+    private void showMarkerColorDialog(View view) {
+        new ColorPickerDialog.Builder(this)
+                .setTitle("Marker-Farbe")
+                .setPreferenceName("MarkerColorPref")
+                .setPositiveButton("Bestätigen", (ColorEnvelopeListener) (envelope, fromUser) -> {
+                    setMarkerColor(envelope);
+                })
+                .setNegativeButton("Abbrechen", (dialogInterface, i) -> dialogInterface.dismiss())
+                .attachAlphaSlideBar(true)
+                .attachBrightnessSlideBar(true)
+                .show();
+    }
+
+    private void showBackgroundColorDialog(View view) {
+        new ColorPickerDialog.Builder(this)
+                .setTitle("Hintergrundfarbe")
+                .setPreferenceName("BackgroundColorPref")
+                .setPositiveButton("Bestätigen", (ColorEnvelopeListener) (envelope, fromUser) -> {
+                    setBackgroundColor(envelope);
+                })
+                .setNegativeButton("Abbrechen", (dialogInterface, i) -> dialogInterface.dismiss())
+                .attachAlphaSlideBar(true)
+                .attachBrightnessSlideBar(true)
+                .show();
+    }
+
+    private void setMarkerColor(ColorEnvelope envelope) {
+        String hexCode = envelope.getHexCode();
+        if (hexCode != null && !hexCode.isEmpty()) {
+            String colorCode = "#" + hexCode;
+            buttonMarkerColor.setBackgroundColor(Color.parseColor(colorCode));
+            trackingValues.setMarkerColor(colorCode);
+            createPreview();
+        }
+    }
+
+    private void setBackgroundColor(ColorEnvelope envelope) {
+        String hexCode = envelope.getHexCode();
+        if (hexCode != null && !hexCode.isEmpty()) {
+            String colorCode = "#" + hexCode;
+            buttonBackgroundColor.setBackgroundColor(Color.parseColor(colorCode));
+            trackingValues.setBackgroundColor(colorCode);
+            createPreview();
+        }
+    }
+
+    private void createPreview() {
+        cleanPreview();
+
+        // Hintergrundfarbe setzen
+        previewTrackingBackground.setBackgroundColor(
+                Color.parseColor(trackingValues.getBackgroundColor()));
+
+        // Marker basierend auf Dichte erstellen
+        switch (trackingValues.getMarkerDensity()) {
+            case 0:
+                break;
+            case 1:
+                createMarkersForGroup(trackingPointList1);
+                break;
+            case 2:
+                createMarkersForGroup(trackingPointList1);
+                createMarkersForGroup(trackingPointList2);
+                break;
+            case 3:
+                createMarkersForGroup(trackingPointList1);
+                createMarkersForGroup(trackingPointList2);
+                createMarkersForGroup(trackingPointList3);
+                break;
+        }
+
+        // Eckmarker erstellen, falls ausgewählt
+        if (trackingValues.getEdgeMarker() != TrackingValues.EdgeMarkerType.NONE) {
+            createEdgeMarkersForGroup(trackingPointListE);
+        }
+    }
+
+    private void createMarkersForGroup(ArrayList<ImageView> group) {
+        int markerType = getMarkerDrawableResource();
+        int markerSize = Utilities.getMarkerSize(trackingValues.getMarkerSize());
+        int markerColor = Color.parseColor(trackingValues.getMarkerColor());
+
+        for (ImageView marker : group) {
+            marker.setImageResource(markerType);
+            marker.getLayoutParams().height = markerSize;
+            marker.getLayoutParams().width = markerSize;
+            marker.setColorFilter(markerColor);
+            marker.requestLayout();
+        }
+    }
+
+    private void createEdgeMarkersForGroup(ArrayList<ImageView> group) {
+        int edgeMarkerType = getEdgeMarkerDrawableResource();
+        int markerColor = Color.parseColor(trackingValues.getMarkerColor());
+
+        for (ImageView marker : group) {
+            marker.setImageResource(edgeMarkerType);
+            marker.setColorFilter(markerColor);
+        }
+    }
+
+    private int getMarkerDrawableResource() {
+        switch (trackingValues.getMarkerType()) {
+            case PIE:
+                return R.drawable.ic_marker_pie;
+            case CIRCLE:
+                return R.drawable.ic_marker_circle;
+            case TRIANGLE:
+                return R.drawable.ic_marker_triangle;
+            case CROSS:
+            default:
+                return R.drawable.ic_marker_cross;
+        }
+    }
+
+    private int getEdgeMarkerDrawableResource() {
+        switch (trackingValues.getEdgeMarker()) {
+            case CORNER:
+                return R.drawable.ic_marker_cross_edge;
+            case SEMICIRCLE:
+                return R.drawable.ic_marker_circle_edge;
+            default:
+                return 0;
+        }
+    }
+
+    private void cleanPreview() {
         // Alle Marker-Bilder zurücksetzen
         for (ImageView marker : trackingPointList1) {
             marker.setImageResource(0);
@@ -167,87 +340,32 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
         }
     }
 
-    /**
-     * Erstellt Marker entsprechend der ausgewählten Dichte
-     */
-    private void setupMarkers() {
-        int markerDensity = trackingValues.getMarkerDensity();
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        if (parent == null) return;
 
-        switch (markerDensity) {
-            case 0:
-                // Keine Marker anzeigen
-                break;
-            case 1:
-                // Nur die erste Marker-Gruppe anzeigen
-                Utilities.createMarker(trackingPointList1, trackingValues);
-                break;
-            case 2:
-                // Erste und zweite Marker-Gruppe anzeigen
-                Utilities.createMarker(trackingPointList1, trackingValues);
-                Utilities.createMarker(trackingPointList2, trackingValues);
-                break;
-            case 3:
-                // Alle Marker-Gruppen anzeigen
-                Utilities.createMarker(trackingPointList1, trackingValues);
-                Utilities.createMarker(trackingPointList2, trackingValues);
-                Utilities.createMarker(trackingPointList3, trackingValues);
-                break;
+        int parentId = parent.getId();
+        if (parentId == R.id.spinner_edge_marker) {
+            trackingValues.setEdgeMarker(parent.getItemAtPosition(position).toString());
+        } else if (parentId == R.id.spinner_marker_density) {
+            trackingValues.setMarkerDensity(parent.getItemAtPosition(position).toString());
+        } else if (parentId == R.id.spinner_marker_size) {
+            trackingValues.setMarkerSize(parent.getItemAtPosition(position).toString());
+        } else if (parentId == R.id.spinner_marker_type) {
+            trackingValues.setMarkerType(parent.getItemAtPosition(position).toString());
         }
-    }
 
-    /**
-     * Erstellt Eckmarker, falls in den Einstellungen aktiviert
-     */
-    private void setupEdgeMarkers() {
-        if (trackingValues.getEdgeMarker() != TrackingValues.EdgeMarkerType.NONE) {
-            Utilities.createEdgeMarker(trackingPointListE, trackingValues);
-        }
-    }
-
-    // GestureDetector.OnGestureListener Implementierung
-
-    @Override
-    public boolean onDown(@NonNull MotionEvent e) {
-        return false;
+        createPreview();
     }
 
     @Override
-    public void onShowPress(@NonNull MotionEvent e) {
-        // Nicht verwendet
+    public void onNothingSelected(AdapterView<?> parent) {
+        // Nicht benötigt, aber durch Interface gefordert
     }
 
     @Override
-    public boolean onSingleTapUp(@NonNull MotionEvent e) {
-        // Tap kann zum Beenden verwendet werden
-        finish();
-        return true;
-    }
-
-    @Override
-    public boolean onScroll(@NonNull MotionEvent e1, @NonNull MotionEvent e2, float distanceX, float distanceY) {
-        return false;
-    }
-
-    @Override
-    public void onLongPress(@NonNull MotionEvent e) {
-        // Nicht verwendet
-    }
-
-    @Override
-    public boolean onFling(@NonNull MotionEvent e1, @NonNull MotionEvent e2, float velocityX, float velocityY) {
-        // Fling kann zur Navigation verwendet werden
-        return false;
-    }
-
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        // Touch-Events an den GestureDetector weiterleiten
-        return gestureDetector.onTouchEvent(event) || super.onTouchEvent(event);
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        binding = null;
+    protected void onResume() {
+        super.onResume();
+        createPreview();
     }
 }

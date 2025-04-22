@@ -16,7 +16,7 @@ public class Utilities {
     private static final String PREFS_NAME = "ScreentrackrPrefs";
 
     // Privater Konstruktor verhindert Instanziierung
-    private Utilities() {
+    Utilities() {
         throw new UnsupportedOperationException("Utilities ist eine statische Hilfsklasse");
     }
 
