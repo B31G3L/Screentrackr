@@ -4,12 +4,12 @@ plugins {
 
 android {
     namespace 'com.beigel.screenTracker'
-    compileSdk 34
+    compileSdk 35
 
     defaultConfig {
         applicationId "com.beigel.screenTracker"
-        minSdk 26
-        targetSdk 34
+        minSdk 27
+        targetSdk 35
         versionCode 3
         versionName "1.1.0"
 
