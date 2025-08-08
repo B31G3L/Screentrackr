@@ -213,17 +213,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         buttonStart.setOnClickListener(v -> {
             // Einstellungen speichern und Tracking-Screen starten
             Utilities.saveSettings(this, trackingValues);
-
-            String message = "Einstellungen gespeichert";
-            if (Utilities.isScrollingEnabled(trackingValues)) {
-                TrackingValues.ScrollMarkerType scrollType = trackingValues.getScrollMarker();
-                if (scrollType == TrackingValues.ScrollMarkerType.VERTICAL) {
-                    message = "Vertikal scrollbare Ansicht wird gestartet";
-                } else if (scrollType == TrackingValues.ScrollMarkerType.HORIZONTAL) {
-                    message = "Horizontal scrollbare Ansicht wird gestartet";
-                }
-            }
-            Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Einstellungen gespeichert", Toast.LENGTH_SHORT).show();
 
             Intent intent = new Intent(MainActivity.this, Trackingscreen.class);
             intent.putExtra("trackingValues", trackingValues);
@@ -345,59 +335,31 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         previewTrackingBackground.setBackgroundColor(
                 Color.parseColor(trackingValues.getBackgroundColor()));
 
-        // Prüfen ob Scroll-Marker aktiviert sind
-        boolean isScrollingEnabled = Utilities.isScrollingEnabled(trackingValues);
-
-        if (isScrollingEnabled) {
-            // Scroll-Marker erstellen
-            createScrollMarkers();
-
-            // Zusätzlich auch die normalen Marker anzeigen
-            switch (trackingValues.getMarkerDensity()) {
-                case 0:
-                    break;
-                case 1:
-                    createMarkersForGroup(trackingPointList1);
-                    break;
-                case 2:
-                    createMarkersForGroup(trackingPointList1);
-                    createMarkersForGroup(trackingPointList2);
-                    break;
-                case 3:
-                    createMarkersForGroup(trackingPointList1);
-                    createMarkersForGroup(trackingPointList2);
-                    createMarkersForGroup(trackingPointList3);
-                    break;
-            }
-
-            // WICHTIG: Eckmarker auch bei Scroll-Markern anzeigen
-            if (trackingValues.getEdgeMarker() != TrackingValues.EdgeMarkerType.NONE) {
-                createEdgeMarkersForGroup(trackingPointListE);
-            }
-        } else {
-            // Normale Marker basierend auf Dichte erstellen
-            switch (trackingValues.getMarkerDensity()) {
-                case 0:
-                    break;
-                case 1:
-                    createMarkersForGroup(trackingPointList1);
-                    break;
-                case 2:
-                    createMarkersForGroup(trackingPointList1);
-                    createMarkersForGroup(trackingPointList2);
-                    break;
-                case 3:
-                    createMarkersForGroup(trackingPointList1);
-                    createMarkersForGroup(trackingPointList2);
-                    createMarkersForGroup(trackingPointList3);
-                    break;
-            }
-
-            // Eckmarker erstellen, falls ausgewählt
-            if (trackingValues.getEdgeMarker() != TrackingValues.EdgeMarkerType.NONE) {
-                createEdgeMarkersForGroup(trackingPointListE);
-            }
+        // Marker basierend auf Dichte erstellen
+        switch (trackingValues.getMarkerDensity()) {
+            case 0:
+                break;
+            case 1:
+                createMarkersForGroup(trackingPointList1);
+                break;
+            case 2:
+                createMarkersForGroup(trackingPointList1);
+                createMarkersForGroup(trackingPointList2);
+                break;
+            case 3:
+                createMarkersForGroup(trackingPointList1);
+                createMarkersForGroup(trackingPointList2);
+                createMarkersForGroup(trackingPointList3);
+                break;
         }
+
+        // Eckmarker erstellen, falls ausgewählt
+        if (trackingValues.getEdgeMarker() != TrackingValues.EdgeMarkerType.NONE) {
+            createEdgeMarkersForGroup(trackingPointListE);
+        }
+
+        // Scroll-Marker erstellen, falls ausgewählt
+        createScrollMarkers();
     }
 
     private void createScrollMarkers() {
@@ -421,16 +383,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
     private void createScrollMarkersForGroup(ArrayList<ImageView> group) {
-        int markerType = getMarkerDrawableResource();
-        int markerSize = Utilities.getMarkerSize(trackingValues.getMarkerSize());
+        int markerType = R.drawable.ic_marker_scroll;
         int markerColor = Color.parseColor(trackingValues.getMarkerColor());
 
         for (ImageView marker : group) {
             marker.setImageResource(markerType);
-            marker.getLayoutParams().height = markerSize;
-            marker.getLayoutParams().width = markerSize;
             marker.setColorFilter(markerColor);
-            marker.requestLayout();
         }
     }
 

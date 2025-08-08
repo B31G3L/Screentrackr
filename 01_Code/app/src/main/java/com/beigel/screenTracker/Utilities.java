@@ -99,7 +99,7 @@ public class Utilities {
 
     /**
      * Erstellt Scroll-Marker mit den angegebenen Einstellungen
-     * Diese Methode wird für die statische Vorschau verwendet
+     * Verwendet dieselben Marker-Typen wie die normalen Marker
      */
     public static void createScrollMarker(ArrayList<ImageView> trackingPointListSV,
                                           ArrayList<ImageView> trackingPointListSH,
@@ -148,67 +148,6 @@ public class Utilities {
             default:
                 return 0; // Sollte nicht erreicht werden
         }
-    }
-
-    /**
-     * Berechnet optimale Marker-Abstände basierend auf Bildschirmgröße und Scroll-Typ
-     */
-    public static float[] calculateMarkerSpacing(Context context, TrackingValues.ScrollMarkerType scrollType) {
-        int screenWidth = context.getResources().getDisplayMetrics().widthPixels;
-        int screenHeight = context.getResources().getDisplayMetrics().heightPixels;
-
-        float spacingX, spacingY;
-
-        switch (scrollType) {
-            case VERTICAL:
-                // Für vertikales Scrollen: Weniger dichte Marker
-                spacingX = screenWidth / 3f; // 3 Marker pro Bildschirmbreite (reduziert von 4f)
-                spacingY = screenHeight / 4f; // 4 Marker pro Bildschirmhöhe (reduziert von 6f)
-                break;
-            case HORIZONTAL:
-                // Für horizontales Scrollen: Weniger dichte Marker
-                spacingX = screenWidth / 4f; // 4 Marker pro Bildschirmbreite (reduziert von 6f)
-                spacingY = screenHeight / 3f; // 3 Marker pro Bildschirmhöhe (reduziert von 4f)
-                break;
-            default:
-                // Fallback-Werte - auch weniger dicht
-                spacingX = screenWidth / 3.5f;
-                spacingY = screenHeight / 3.5f;
-                break;
-        }
-
-        return new float[]{spacingX, spacingY};
-    }
-
-    /**
-     * Berechnet die optimale Scroll-Geschwindigkeit basierend auf der Marker-Dichte
-     */
-    public static float calculateScrollSensitivity(TrackingValues trackingValues) {
-        // Basis-Sensitivität
-        float baseSensitivity = 1.0f;
-
-        // Anpassung basierend auf Marker-Dichte
-        int density = trackingValues.getMarkerDensity();
-        switch (density) {
-            case 0:
-                return baseSensitivity * 2.0f; // Schneller, da weniger Details
-            case 1:
-                return baseSensitivity * 1.5f;
-            case 2:
-                return baseSensitivity;
-            case 3:
-                return baseSensitivity * 0.7f; // Langsamer für präzise Bewegungen
-            default:
-                return baseSensitivity;
-        }
-    }
-
-    /**
-     * Prüft ob Scroll-Funktionalität verfügbar ist
-     */
-    public static boolean isScrollingEnabled(TrackingValues trackingValues) {
-        return trackingValues != null &&
-                trackingValues.getScrollMarker() != TrackingValues.ScrollMarkerType.NONE;
     }
 
     /**
