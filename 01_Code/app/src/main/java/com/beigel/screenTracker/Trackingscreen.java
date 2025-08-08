@@ -28,6 +28,7 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
     private ActivityTrackingscreenBinding binding;
     private TrackingValues trackingValues;
     private GestureDetectorCompat gestureDetector;
+    private ScrollableTrackingView scrollableView;
 
     private ArrayList<ImageView> trackingPointList1;
     private ArrayList<ImageView> trackingPointList2;
@@ -149,6 +150,48 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
      * Richtet die Tracking-Ansicht gemäß den Einstellungen ein
      */
     private void setupTracking() {
+        // Prüfen ob Scroll-Marker aktiviert sind
+        if (trackingValues.getScrollMarker() != TrackingValues.ScrollMarkerType.NONE) {
+            setupScrollableView();
+        } else {
+            setupStaticView();
+        }
+    }
+
+    /**
+     * Richtet die scrollbare Ansicht ein
+     */
+    private void setupScrollableView() {
+        // Alle statischen Marker ausblenden
+        binding.trackingBackground.setVisibility(View.GONE);
+
+        // ScrollableTrackingView erstellen und konfigurieren
+        scrollableView = new ScrollableTrackingView(this);
+        scrollableView.setTrackingValues(trackingValues);
+
+        // Marker-Abstände basierend auf Bildschirmgröße anpassen
+        int screenWidth = getResources().getDisplayMetrics().widthPixels;
+        int screenHeight = getResources().getDisplayMetrics().heightPixels;
+
+        // Weniger dichte scrollbare Marker für bessere Sichtbarkeit der festen Marker
+        float spacingX = screenWidth / 3f; // Reduziert von 4f - weniger Marker pro Breite
+        float spacingY = screenHeight / 4f; // Reduziert von 5f - weniger Marker pro Höhe
+
+        scrollableView.setMarkerSpacing(spacingX, spacingY);
+
+        // View zum Layout hinzufügen
+        setContentView(scrollableView);
+
+        // Vollbildmodus für die scrollbare View
+        hideSystemBars();
+    }
+
+    /**
+     * Richtet die statische Ansicht ein (bestehende Funktionalität)
+     */
+    private void setupStaticView() {
+        binding.trackingBackground.setVisibility(View.VISIBLE);
+
         // Alle Marker zurücksetzen
         resetAllMarkers();
 
@@ -162,7 +205,7 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
         // Eckmarker erstellen, falls ausgewählt
         setupEdgeMarkers();
 
-        // Scroll-Marker erstellen, falls ausgewählt
+        // Scroll-Marker erstellen, falls ausgewählt (sollte hier eigentlich nicht vorkommen)
         setupScrollMarkers();
     }
 
@@ -230,6 +273,7 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
 
     /**
      * Erstellt Scroll-Marker, falls in den Einstellungen aktiviert
+     * (Sollte eigentlich nicht aufgerufen werden, da scrollbare View verwendet wird)
      */
     private void setupScrollMarkers() {
         if (trackingValues.getScrollMarker() != TrackingValues.ScrollMarkerType.NONE) {
@@ -251,9 +295,12 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
 
     @Override
     public boolean onSingleTapUp(@NonNull MotionEvent e) {
-        // Tap kann zum Beenden verwendet werden
-        finish();
-        return true;
+        // Tap kann zum Beenden verwendet werden (nur bei statischer Ansicht)
+        if (scrollableView == null) {
+            finish();
+            return true;
+        }
+        return false;
     }
 
     @Override
@@ -274,13 +321,17 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        // Touch-Events an den GestureDetector weiterleiten
-        return gestureDetector.onTouchEvent(event) || super.onTouchEvent(event);
+        // Touch-Events an den GestureDetector weiterleiten (nur bei statischer Ansicht)
+        if (scrollableView == null) {
+            return gestureDetector.onTouchEvent(event) || super.onTouchEvent(event);
+        }
+        return super.onTouchEvent(event);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         binding = null;
+        scrollableView = null;
     }
 }
