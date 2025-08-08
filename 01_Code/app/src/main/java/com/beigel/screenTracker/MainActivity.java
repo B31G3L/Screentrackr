@@ -193,9 +193,49 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         footerText.setMovementMethod(LinkMovementMethod.getInstance());
     }
 
+    /**
+     * Berechnet die Helligkeit einer Farbe nach der Luminanz-Formel
+     * @param color Die Farbe als int-Wert
+     * @return true wenn die Farbe hell ist, false wenn dunkel
+     */
+    private boolean isColorBright(int color) {
+        // RGB-Werte extrahieren
+        int red = Color.red(color);
+        int green = Color.green(color);
+        int blue = Color.blue(color);
+
+        // Relative Luminanz berechnen (Perceptual Brightness)
+        double luminance = (0.299 * red + 0.587 * green + 0.114 * blue) / 255.0;
+
+        // Schwellenwert für hell/dunkel (0.5 = 50%)
+        return luminance > 0.5;
+    }
+
+    /**
+     * Setzt die optimale Textfarbe basierend auf der Hintergrundfarbe
+     * @param button Der Button, dessen Textfarbe angepasst werden soll
+     * @param backgroundColor Die Hintergrundfarbe
+     */
+    private void setOptimalTextColor(Button button, int backgroundColor) {
+        if (isColorBright(backgroundColor)) {
+            // Helle Hintergrundfarbe -> Dunkler Text
+            button.setTextColor(Color.BLACK);
+        } else {
+            // Dunkle Hintergrundfarbe -> Heller Text
+            button.setTextColor(Color.WHITE);
+        }
+    }
+
     private void updateColorButtons() {
-        buttonBackgroundColor.setBackgroundColor(Color.parseColor(trackingValues.getBackgroundColor()));
-        buttonMarkerColor.setBackgroundColor(Color.parseColor(trackingValues.getMarkerColor()));
+        // Hintergrundfarbe setzen
+        int bgColor = Color.parseColor(trackingValues.getBackgroundColor());
+        buttonBackgroundColor.setBackgroundColor(bgColor);
+        setOptimalTextColor(buttonBackgroundColor, bgColor);
+
+        // Markerfarbe setzen
+        int markerColor = Color.parseColor(trackingValues.getMarkerColor());
+        buttonMarkerColor.setBackgroundColor(markerColor);
+        setOptimalTextColor(buttonMarkerColor, markerColor);
     }
 
     private void showMarkerColorDialog(View view) {
@@ -228,7 +268,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         String hexCode = envelope.getHexCode();
         if (hexCode != null && !hexCode.isEmpty()) {
             String colorCode = "#" + hexCode;
-            buttonMarkerColor.setBackgroundColor(Color.parseColor(colorCode));
+            int color = Color.parseColor(colorCode);
+
+            buttonMarkerColor.setBackgroundColor(color);
+            setOptimalTextColor(buttonMarkerColor, color);
+
             trackingValues.setMarkerColor(colorCode);
             createPreview();
         }
@@ -238,7 +282,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         String hexCode = envelope.getHexCode();
         if (hexCode != null && !hexCode.isEmpty()) {
             String colorCode = "#" + hexCode;
-            buttonBackgroundColor.setBackgroundColor(Color.parseColor(colorCode));
+            int color = Color.parseColor(colorCode);
+
+            buttonBackgroundColor.setBackgroundColor(color);
+            setOptimalTextColor(buttonBackgroundColor, color);
+
             trackingValues.setBackgroundColor(colorCode);
             createPreview();
         }
