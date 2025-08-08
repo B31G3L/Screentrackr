@@ -8,8 +8,7 @@ import android.widget.ImageView;
 import java.util.ArrayList;
 
 /**
- * Statische Utility-Klasse mit verbesserten Methoden für die Marker-Erstellung
- * und Einstellungsverwaltung
+ * Statische Utility-Klasse mit erweiterten Methoden für Scroll-Marker
  */
 public class Utilities {
 
@@ -22,9 +21,6 @@ public class Utilities {
 
     /**
      * Erstellt Marker mit den angegebenen Einstellungen
-     *
-     * @param trackingPointList Liste der ImageViews für die Marker
-     * @param trackingValues Einstellungen für die Marker
      */
     public static void createMarker(ArrayList<ImageView> trackingPointList, TrackingValues trackingValues) {
         int markerType = getMarkerDrawable(trackingValues.getMarkerType());
@@ -85,9 +81,6 @@ public class Utilities {
 
     /**
      * Erstellt Edge-Marker mit den angegebenen Einstellungen
-     *
-     * @param trackingPointListE Liste der ImageViews für die Edge-Marker
-     * @param trackingValues Einstellungen für die Marker
      */
     public static void createEdgeMarker(ArrayList<ImageView> trackingPointListE, TrackingValues trackingValues) {
         // Wenn keine Eckmarker gewünscht sind, frühzeitig beenden
@@ -101,6 +94,45 @@ public class Utilities {
         for (ImageView marker : trackingPointListE) {
             marker.setImageResource(edgeMarker);
             marker.setColorFilter(markerColor);
+        }
+    }
+
+    /**
+     * Erstellt Scroll-Marker mit den angegebenen Einstellungen
+     * Verwendet dieselben Marker-Typen wie die normalen Marker
+     */
+    public static void createScrollMarker(ArrayList<ImageView> trackingPointListSV,
+                                          ArrayList<ImageView> trackingPointListSH,
+                                          TrackingValues trackingValues) {
+        // Alle Scroll-Marker zurücksetzen
+        resetScrollMarkers(trackingPointListSV, trackingPointListSH);
+
+        TrackingValues.ScrollMarkerType scrollType = trackingValues.getScrollMarker();
+
+        switch (scrollType) {
+            case VERTICAL:
+                createMarker(trackingPointListSV, trackingValues);
+                break;
+            case HORIZONTAL:
+                createMarker(trackingPointListSH, trackingValues);
+                break;
+            case NONE:
+            default:
+                // Keine Scroll-Marker anzeigen
+                break;
+        }
+    }
+
+    /**
+     * Setzt alle Scroll-Marker zurück
+     */
+    private static void resetScrollMarkers(ArrayList<ImageView> trackingPointListSV,
+                                           ArrayList<ImageView> trackingPointListSH) {
+        for (ImageView marker : trackingPointListSV) {
+            marker.setImageResource(0);
+        }
+        for (ImageView marker : trackingPointListSH) {
+            marker.setImageResource(0);
         }
     }
 
@@ -120,9 +152,6 @@ public class Utilities {
 
     /**
      * Speichert die Tracking-Einstellungen
-     *
-     * @param context App-Kontext
-     * @param trackingValues Zu speichernde Einstellungen
      */
     public static void saveSettings(Context context, TrackingValues trackingValues) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
@@ -134,15 +163,13 @@ public class Utilities {
         editor.putInt("markerSize", trackingValues.getMarkerSize());
         editor.putString("markerType", trackingValues.getMarkerType().name());
         editor.putString("edgeMarker", trackingValues.getEdgeMarker().name());
+        editor.putString("scrollMarker", trackingValues.getScrollMarker().name());
 
         editor.apply();
     }
 
     /**
      * Lädt die Tracking-Einstellungen
-     *
-     * @param context App-Kontext
-     * @return Gespeicherte Einstellungen oder Default-Werte, falls keine Einstellungen existieren
      */
     public static TrackingValues loadSettings(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
@@ -167,6 +194,13 @@ public class Utilities {
             trackingValues.setEdgeMarker(TrackingValues.EdgeMarkerType.valueOf(edgeMarkerString));
         } catch (IllegalArgumentException e) {
             trackingValues.setEdgeMarker(TrackingValues.EdgeMarkerType.NONE);
+        }
+
+        try {
+            String scrollMarkerString = prefs.getString("scrollMarker", TrackingValues.ScrollMarkerType.NONE.name());
+            trackingValues.setScrollMarker(TrackingValues.ScrollMarkerType.valueOf(scrollMarkerString));
+        } catch (IllegalArgumentException e) {
+            trackingValues.setScrollMarker(TrackingValues.ScrollMarkerType.NONE);
         }
 
         return trackingValues;

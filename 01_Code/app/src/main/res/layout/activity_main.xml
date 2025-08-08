@@ -215,6 +215,7 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
@@ -228,6 +229,29 @@
 
                     <Spinner
                         android:id="@+id/spinner_edge_marker"
+                        android:layout_width="120dp"
+                        android:layout_height="48dp"
+                        android:background="@drawable/spinner_background"
+                        android:popupBackground="@color/background" />
+                </LinearLayout>
+
+                <!-- Scroll-Marker -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/value_scroll_marker"
+                        android:textColor="@color/text_light"
+                        android:textSize="16sp" />
+
+                    <Spinner
+                        android:id="@+id/spinner_scroll_marker"
                         android:layout_width="120dp"
                         android:layout_height="48dp"
                         android:background="@drawable/spinner_background"

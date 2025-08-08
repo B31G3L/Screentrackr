@@ -6,6 +6,7 @@
     <string name="value_marker_size">Marker size</string>
     <string name="value_marker_type">Marker type</string>
     <string name="value_edge_marker">Edge markers</string>
+    <string name="value_scroll_marker">Scroll markers</string>
 
     <string name="button_text_start">Start</string>
     <string name="text_overall_bright">Overall brightness:</string>
@@ -22,6 +23,12 @@
         <item>None</item>
         <item>Corner</item>
         <item>Semicircle</item>
+    </string-array>
+
+    <string-array name="scroll_markers_array">
+        <item>None</item>
+        <item>Vertical</item>
+        <item>Horizontal</item>
     </string-array>
 
     <string-array name="marker_density_array">

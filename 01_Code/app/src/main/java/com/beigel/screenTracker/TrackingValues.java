@@ -3,8 +3,7 @@ package com.beigel.screenTracker;
 import java.io.Serializable;
 
 /**
- * Verbesserte TrackingValues-Klasse mit Enums für sicherere Typisierung
- * und bessere Code-Qualität
+ * Erweiterte TrackingValues-Klasse mit Scroll-Markern
  */
 public class TrackingValues implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -76,6 +75,39 @@ public class TrackingValues implements Serializable {
         }
     }
 
+    /**
+     * Verfügbare Scroll-Marker-Typen
+     */
+    public enum ScrollMarkerType {
+        NONE("None"),
+        VERTICAL("Vertical"),
+        HORIZONTAL("Horizontal");
+
+        private final String displayName;
+
+        ScrollMarkerType(String displayName) {
+            this.displayName = displayName;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
+
+        public static ScrollMarkerType fromString(String text) {
+            for (ScrollMarkerType type : ScrollMarkerType.values()) {
+                if (type.displayName.equalsIgnoreCase(text)) {
+                    return type;
+                }
+            }
+            return NONE; // Default-Wert
+        }
+
+        @Override
+        public String toString() {
+            return displayName;
+        }
+    }
+
     // Standardwerte
     private String backgroundColor = "#000000";
     private String markerColor = "#FFFFFF";
@@ -83,6 +115,7 @@ public class TrackingValues implements Serializable {
     private int markerSize = 1;
     private MarkerType markerType = MarkerType.CROSS;
     private EdgeMarkerType edgeMarker = EdgeMarkerType.NONE;
+    private ScrollMarkerType scrollMarker = ScrollMarkerType.NONE;
 
     // Konstruktoren
     public TrackingValues() {
@@ -178,6 +211,21 @@ public class TrackingValues implements Serializable {
         this.edgeMarker = EdgeMarkerType.fromString(edgeMarker);
     }
 
+    public ScrollMarkerType getScrollMarker() {
+        return scrollMarker;
+    }
+
+    public void setScrollMarker(ScrollMarkerType scrollMarker) {
+        if (scrollMarker != null) {
+            this.scrollMarker = scrollMarker;
+        }
+    }
+
+    // Überladene Methode für String-Eingabe
+    public void setScrollMarker(String scrollMarker) {
+        this.scrollMarker = ScrollMarkerType.fromString(scrollMarker);
+    }
+
     // Legacy-Methoden für Kompatibilität
     public String getMarkerDensityAsString() {
         return String.valueOf(markerDensity);
@@ -193,6 +241,10 @@ public class TrackingValues implements Serializable {
 
     public String getEdgeMarkerAsString() {
         return edgeMarker.toString();
+    }
+
+    public String getScrollMarkerAsString() {
+        return scrollMarker.toString();
     }
 
     // Hilfsmethode zur Validierung von Hex-Farbcodes

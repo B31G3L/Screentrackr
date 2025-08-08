@@ -21,8 +21,7 @@ import com.beigel.screenTracker.databinding.ActivityTrackingscreenBinding;
 import java.util.ArrayList;
 
 /**
- * Vollbildschirm-Tracking-Ansicht
- * Zeigt Marker gemäß den Benutzereinstellungen an
+ * Vollbildschirm-Tracking-Ansicht mit Scroll-Marker-Unterstützung
  */
 public class Trackingscreen extends AppCompatActivity implements GestureDetector.OnGestureListener {
 
@@ -34,6 +33,8 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
     private ArrayList<ImageView> trackingPointList2;
     private ArrayList<ImageView> trackingPointList3;
     private ArrayList<ImageView> trackingPointListE;
+    private ArrayList<ImageView> trackingPointListSV; // Scroll Vertical
+    private ArrayList<ImageView> trackingPointListSH; // Scroll Horizontal
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,6 +91,8 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
         trackingPointList2 = new ArrayList<>();
         trackingPointList3 = new ArrayList<>();
         trackingPointListE = new ArrayList<>();
+        trackingPointListSV = new ArrayList<>();
+        trackingPointListSH = new ArrayList<>();
 
         // Gruppe 1
         trackingPointList1.add(binding.trackingPoint11);
@@ -115,6 +118,18 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
         trackingPointListE.add(binding.trackingPointE2);
         trackingPointListE.add(binding.trackingPointE3);
         trackingPointListE.add(binding.trackingPointE4);
+
+        // Scroll-Marker Vertikal
+        trackingPointListSV.add(binding.trackingPointSV1);
+        trackingPointListSV.add(binding.trackingPointSV2);
+        trackingPointListSV.add(binding.trackingPointSV3);
+        trackingPointListSV.add(binding.trackingPointSV4);
+
+        // Scroll-Marker Horizontal
+        trackingPointListSH.add(binding.trackingPointSH1);
+        trackingPointListSH.add(binding.trackingPointSH2);
+        trackingPointListSH.add(binding.trackingPointSH3);
+        trackingPointListSH.add(binding.trackingPointSH4);
     }
 
     /**
@@ -146,6 +161,9 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
 
         // Eckmarker erstellen, falls ausgewählt
         setupEdgeMarkers();
+
+        // Scroll-Marker erstellen, falls ausgewählt
+        setupScrollMarkers();
     }
 
     /**
@@ -163,6 +181,12 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
             marker.setImageResource(0);
         }
         for (ImageView marker : trackingPointListE) {
+            marker.setImageResource(0);
+        }
+        for (ImageView marker : trackingPointListSV) {
+            marker.setImageResource(0);
+        }
+        for (ImageView marker : trackingPointListSH) {
             marker.setImageResource(0);
         }
     }
@@ -201,6 +225,15 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
     private void setupEdgeMarkers() {
         if (trackingValues.getEdgeMarker() != TrackingValues.EdgeMarkerType.NONE) {
             Utilities.createEdgeMarker(trackingPointListE, trackingValues);
+        }
+    }
+
+    /**
+     * Erstellt Scroll-Marker, falls in den Einstellungen aktiviert
+     */
+    private void setupScrollMarkers() {
+        if (trackingValues.getScrollMarker() != TrackingValues.ScrollMarkerType.NONE) {
+            Utilities.createScrollMarker(trackingPointListSV, trackingPointListSH, trackingValues);
         }
     }
 

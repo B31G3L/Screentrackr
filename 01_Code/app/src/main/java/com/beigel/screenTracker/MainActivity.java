@@ -37,11 +37,14 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private Spinner spinnerMarkerSize;
     private Spinner spinnerMarkerType;
     private Spinner spinnerEdgeMarkers;
+    private Spinner spinnerScrollMarkers;
 
     private ArrayList<ImageView> trackingPointList1;
     private ArrayList<ImageView> trackingPointList2;
     private ArrayList<ImageView> trackingPointList3;
     private ArrayList<ImageView> trackingPointListE;
+    private ArrayList<ImageView> trackingPointListSV; // Scroll Vertical
+    private ArrayList<ImageView> trackingPointListSH; // Scroll Horizontal
 
     private TrackingValues trackingValues;
 
@@ -80,6 +83,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         spinnerMarkerSize = findViewById(R.id.spinner_marker_size);
         spinnerMarkerType = findViewById(R.id.spinner_marker_type);
         spinnerEdgeMarkers = findViewById(R.id.spinner_edge_marker);
+        spinnerScrollMarkers = findViewById(R.id.spinner_scroll_marker);
     }
 
     /**
@@ -90,6 +94,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         trackingPointList2 = new ArrayList<>();
         trackingPointList3 = new ArrayList<>();
         trackingPointListE = new ArrayList<>();
+        trackingPointListSV = new ArrayList<>();
+        trackingPointListSH = new ArrayList<>();
 
         // Gruppe 1
         trackingPointList1.add(findViewById(R.id.trackingPoint_1_1));
@@ -115,6 +121,18 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         trackingPointListE.add(findViewById(R.id.trackingPoint_E_2));
         trackingPointListE.add(findViewById(R.id.trackingPoint_E_3));
         trackingPointListE.add(findViewById(R.id.trackingPoint_E_4));
+
+        // Scroll-Marker Vertikal
+        trackingPointListSV.add(findViewById(R.id.trackingPoint_SV_1));
+        trackingPointListSV.add(findViewById(R.id.trackingPoint_SV_2));
+        trackingPointListSV.add(findViewById(R.id.trackingPoint_SV_3));
+        trackingPointListSV.add(findViewById(R.id.trackingPoint_SV_4));
+
+        // Scroll-Marker Horizontal
+        trackingPointListSH.add(findViewById(R.id.trackingPoint_SH_1));
+        trackingPointListSH.add(findViewById(R.id.trackingPoint_SH_2));
+        trackingPointListSH.add(findViewById(R.id.trackingPoint_SH_3));
+        trackingPointListSH.add(findViewById(R.id.trackingPoint_SH_4));
     }
 
     private void setupSpinners() {
@@ -149,6 +167,14 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         spinnerEdgeMarkers.setAdapter(edgeAdapter);
         spinnerEdgeMarkers.setSelection(getEdgeMarkerPosition());
         spinnerEdgeMarkers.setOnItemSelectedListener(this);
+
+        // Spinner für Scroll-Marker
+        ArrayAdapter<CharSequence> scrollAdapter = ArrayAdapter.createFromResource(
+                this, R.array.scroll_markers_array, android.R.layout.simple_spinner_item);
+        scrollAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerScrollMarkers.setAdapter(scrollAdapter);
+        spinnerScrollMarkers.setSelection(getScrollMarkerPosition());
+        spinnerScrollMarkers.setOnItemSelectedListener(this);
     }
 
     private int getMarkerTypePosition() {
@@ -168,6 +194,16 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             case NONE: return 0;
             case CORNER: return 1;
             case SEMICIRCLE: return 2;
+            default: return 0;
+        }
+    }
+
+    private int getScrollMarkerPosition() {
+        TrackingValues.ScrollMarkerType type = trackingValues.getScrollMarker();
+        switch (type) {
+            case NONE: return 0;
+            case VERTICAL: return 1;
+            case HORIZONTAL: return 2;
             default: return 0;
         }
     }
@@ -321,6 +357,39 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         if (trackingValues.getEdgeMarker() != TrackingValues.EdgeMarkerType.NONE) {
             createEdgeMarkersForGroup(trackingPointListE);
         }
+
+        // Scroll-Marker erstellen, falls ausgewählt
+        createScrollMarkers();
+    }
+
+    private void createScrollMarkers() {
+        TrackingValues.ScrollMarkerType scrollType = trackingValues.getScrollMarker();
+
+        // Erstelle alle Scroll-Marker zurück
+        cleanScrollMarkers();
+
+        switch (scrollType) {
+            case VERTICAL:
+                createScrollMarkersForGroup(trackingPointListSV);
+                break;
+            case HORIZONTAL:
+                createScrollMarkersForGroup(trackingPointListSH);
+                break;
+            case NONE:
+            default:
+                // Keine Scroll-Marker anzeigen
+                break;
+        }
+    }
+
+    private void createScrollMarkersForGroup(ArrayList<ImageView> group) {
+        int markerType = R.drawable.ic_marker_scroll;
+        int markerColor = Color.parseColor(trackingValues.getMarkerColor());
+
+        for (ImageView marker : group) {
+            marker.setImageResource(markerType);
+            marker.setColorFilter(markerColor);
+        }
     }
 
     private void createMarkersForGroup(ArrayList<ImageView> group) {
@@ -386,6 +455,17 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         for (ImageView marker : trackingPointListE) {
             marker.setImageResource(0);
         }
+        cleanScrollMarkers();
+    }
+
+    private void cleanScrollMarkers() {
+        // Scroll-Marker zurücksetzen
+        for (ImageView marker : trackingPointListSV) {
+            marker.setImageResource(0);
+        }
+        for (ImageView marker : trackingPointListSH) {
+            marker.setImageResource(0);
+        }
     }
 
     @Override
@@ -395,6 +475,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         int parentId = parent.getId();
         if (parentId == R.id.spinner_edge_marker) {
             trackingValues.setEdgeMarker(parent.getItemAtPosition(position).toString());
+        } else if (parentId == R.id.spinner_scroll_marker) {
+            trackingValues.setScrollMarker(parent.getItemAtPosition(position).toString());
         } else if (parentId == R.id.spinner_marker_density) {
             trackingValues.setMarkerDensity(parent.getItemAtPosition(position).toString());
         } else if (parentId == R.id.spinner_marker_size) {
