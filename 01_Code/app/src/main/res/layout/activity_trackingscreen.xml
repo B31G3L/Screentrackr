@@ -8,307 +8,244 @@
     android:foregroundTint="#BC3333"
     tools:context=".Trackingscreen">
 
-    <!-- Eckmarker -->
-    <ImageView
-        android:id="@+id/trackingPoint_E_1"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:srcCompat="@drawable/ic_marker_cross_edge"
-        tools:ignore="ImageContrastCheck"/>
-    <ImageView
-        android:id="@+id/trackingPoint_E_2"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        android:rotation="90"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:srcCompat="@drawable/ic_marker_cross_edge"
-        tools:ignore="ImageContrastCheck"/>
-    <ImageView
-        android:id="@+id/trackingPoint_E_3"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:rotation="180"
-        app:srcCompat="@drawable/ic_marker_cross_edge"
-        tools:ignore="ImageContrastCheck"/>
-    <ImageView
-        android:id="@+id/trackingPoint_E_4"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        android:rotation="270"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_marker_cross_edge"
-        tools:ignore="ImageContrastCheck" />
-
-    <!-- Scroll-Marker (verwenden dieselben Positionen wie trackingPoint_3_1 bis 3_4) -->
-    <ImageView
-        android:id="@+id/trackingPoint_SV_1"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        app:layout_constraintBottom_toBottomOf="@+id/trackingPoint_1_5"
-        app:layout_constraintEnd_toEndOf="@+id/trackingPoint_1_5"
-        app:layout_constraintStart_toStartOf="@+id/guideline_left_ver"
-        app:layout_constraintTop_toTopOf="@+id/guideline_top_hor"
-        app:srcCompat="@drawable/ic_marker_cross"
-        tools:ignore="ImageContrastCheck" />
-
-    <ImageView
-        android:id="@+id/trackingPoint_SV_2"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        app:layout_constraintBottom_toBottomOf="@+id/trackingPoint_1_5"
-        app:layout_constraintEnd_toStartOf="@+id/guideline_right_ver"
-        app:layout_constraintStart_toStartOf="@+id/trackingPoint_1_5"
-        app:layout_constraintTop_toTopOf="@+id/guideline_top_hor"
-        app:srcCompat="@drawable/ic_marker_cross"
-        tools:ignore="ImageContrastCheck" />
-
-    <ImageView
-        android:id="@+id/trackingPoint_SV_3"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        app:layout_constraintBottom_toTopOf="@+id/guideline_bottom_hor"
-        app:layout_constraintEnd_toStartOf="@+id/guideline_right_ver"
-        app:layout_constraintStart_toStartOf="@+id/trackingPoint_1_5"
-        app:layout_constraintTop_toTopOf="@+id/trackingPoint_1_5"
-        app:srcCompat="@drawable/ic_marker_cross"
-        tools:ignore="ImageContrastCheck" />
-
-    <ImageView
-        android:id="@+id/trackingPoint_SV_4"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        app:layout_constraintBottom_toTopOf="@+id/guideline_bottom_hor"
-        app:layout_constraintEnd_toEndOf="@+id/trackingPoint_1_5"
-        app:layout_constraintStart_toStartOf="@+id/guideline_left_ver"
-        app:layout_constraintTop_toTopOf="@+id/trackingPoint_1_5"
-        app:srcCompat="@drawable/ic_marker_cross"
-        tools:ignore="ImageContrastCheck" />
-
-    <!-- Scroll-Marker Horizontal (verwenden dieselben Positionen wie trackingPoint_3_1 bis 3_4) -->
-    <ImageView
-        android:id="@+id/trackingPoint_SH_1"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        app:layout_constraintBottom_toBottomOf="@+id/trackingPoint_1_5"
-        app:layout_constraintEnd_toEndOf="@+id/trackingPoint_1_5"
-        app:layout_constraintStart_toStartOf="@+id/guideline_left_ver"
-        app:layout_constraintTop_toTopOf="@+id/guideline_top_hor"
-        app:srcCompat="@drawable/ic_marker_cross"
-        tools:ignore="ImageContrastCheck" />
-
-    <ImageView
-        android:id="@+id/trackingPoint_SH_2"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        app:layout_constraintBottom_toBottomOf="@+id/trackingPoint_1_5"
-        app:layout_constraintEnd_toStartOf="@+id/guideline_right_ver"
-        app:layout_constraintStart_toStartOf="@+id/trackingPoint_1_5"
-        app:layout_constraintTop_toTopOf="@+id/guideline_top_hor"
-        app:srcCompat="@drawable/ic_marker_cross"
-        tools:ignore="ImageContrastCheck" />
-
-    <ImageView
-        android:id="@+id/trackingPoint_SH_3"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        app:layout_constraintBottom_toTopOf="@+id/guideline_bottom_hor"
-        app:layout_constraintEnd_toStartOf="@+id/guideline_right_ver"
-        app:layout_constraintStart_toStartOf="@+id/trackingPoint_1_5"
-        app:layout_constraintTop_toTopOf="@+id/trackingPoint_1_5"
-        app:srcCompat="@drawable/ic_marker_cross"
-        tools:ignore="ImageContrastCheck" />
-
-    <ImageView
-        android:id="@+id/trackingPoint_SH_4"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        app:layout_constraintBottom_toTopOf="@+id/guideline_bottom_hor"
-        app:layout_constraintEnd_toEndOf="@+id/trackingPoint_1_5"
-        app:layout_constraintStart_toStartOf="@+id/guideline_left_ver"
-        app:layout_constraintTop_toTopOf="@+id/trackingPoint_1_5"
-        app:srcCompat="@drawable/ic_marker_cross"
-        tools:ignore="ImageContrastCheck" />
-
-    <!-- Reguläre Marker -->
-    <ImageView
-        android:id="@+id/trackingPoint_1_4"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        app:layout_constraintBottom_toTopOf="@+id/guideline_bottom_hor"
-        app:layout_constraintEnd_toStartOf="@+id/guideline_right_ver"
-        app:srcCompat="@drawable/ic_marker_cross"
-        tools:ignore="ImageContrastCheck" />
-
-    <ImageView
-        android:id="@+id/trackingPoint_1_3"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        app:layout_constraintBottom_toTopOf="@+id/guideline_bottom_hor"
-        app:layout_constraintStart_toEndOf="@+id/guideline_left_ver"
-        app:srcCompat="@drawable/ic_marker_cross"
-        tools:ignore="ImageContrastCheck" />
-
-    <ImageView
-        android:id="@+id/trackingPoint_1_2"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        app:layout_constraintEnd_toStartOf="@id/guideline_right_ver"
-        app:layout_constraintTop_toBottomOf="@id/guideline_top_hor"
-        app:srcCompat="@drawable/ic_marker_cross"
-        tools:ignore="ImageContrastCheck" />
-
-    <ImageView
-        android:id="@+id/trackingPoint_1_1"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        app:layout_constraintStart_toEndOf="@id/guideline_left_ver"
-        app:layout_constraintTop_toBottomOf="@id/guideline_top_hor"
-        app:srcCompat="@drawable/ic_marker_cross"
-        tools:ignore="ImageContrastCheck" />
-
-    <ImageView
-        android:id="@+id/trackingPoint_1_5"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
+    <!-- Haupt-Tracking-Layer mit bestehenden Markern -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/mainTrackingLayer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_marker_cross"
-        tools:ignore="ImageContrastCheck" />
+        app:layout_constraintTop_toTopOf="parent">
 
-    <!-- Guidelines -->
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guideline_mid_ver"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.5" />
+        <!-- Eckmarker -->
+        <ImageView
+            android:id="@+id/trackingPoint_E_1"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:srcCompat="@drawable/ic_marker_cross_edge"
+            tools:ignore="ImageContrastCheck"/>
+        <ImageView
+            android:id="@+id/trackingPoint_E_2"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:rotation="90"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:srcCompat="@drawable/ic_marker_cross_edge"
+            tools:ignore="ImageContrastCheck"/>
+        <ImageView
+            android:id="@+id/trackingPoint_E_3"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:rotation="180"
+            app:srcCompat="@drawable/ic_marker_cross_edge"
+            tools:ignore="ImageContrastCheck"/>
+        <ImageView
+            android:id="@+id/trackingPoint_E_4"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:rotation="270"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_marker_cross_edge"
+            tools:ignore="ImageContrastCheck" />
 
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guideline_mid_hor"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.5" />
+        <!-- Reguläre Marker -->
+        <ImageView
+            android:id="@+id/trackingPoint_1_4"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            app:layout_constraintBottom_toTopOf="@+id/guideline_bottom_hor"
+            app:layout_constraintEnd_toStartOf="@+id/guideline_right_ver"
+            app:srcCompat="@drawable/ic_marker_cross"
+            tools:ignore="ImageContrastCheck" />
 
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guideline_left_ver"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.10" />
+        <ImageView
+            android:id="@+id/trackingPoint_1_3"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            app:layout_constraintBottom_toTopOf="@+id/guideline_bottom_hor"
+            app:layout_constraintStart_toEndOf="@+id/guideline_left_ver"
+            app:srcCompat="@drawable/ic_marker_cross"
+            tools:ignore="ImageContrastCheck" />
 
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guideline_right_ver"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.90" />
+        <ImageView
+            android:id="@+id/trackingPoint_1_2"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            app:layout_constraintEnd_toStartOf="@id/guideline_right_ver"
+            app:layout_constraintTop_toBottomOf="@id/guideline_top_hor"
+            app:srcCompat="@drawable/ic_marker_cross"
+            tools:ignore="ImageContrastCheck" />
 
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guideline_top_hor"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.05" />
+        <ImageView
+            android:id="@+id/trackingPoint_1_1"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            app:layout_constraintStart_toEndOf="@id/guideline_left_ver"
+            app:layout_constraintTop_toBottomOf="@id/guideline_top_hor"
+            app:srcCompat="@drawable/ic_marker_cross"
+            tools:ignore="ImageContrastCheck" />
 
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guideline_bottom_hor"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.95" />
+        <ImageView
+            android:id="@+id/trackingPoint_1_5"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_marker_cross"
+            tools:ignore="ImageContrastCheck" />
 
-    <!-- Weitere Marker-Gruppen 2 und 3 -->
-    <ImageView
-        android:id="@+id/trackingPoint_2_3"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        app:layout_constraintBottom_toTopOf="@id/guideline_bottom_hor"
-        app:layout_constraintEnd_toStartOf="@+id/guideline_right_ver"
-        app:layout_constraintStart_toStartOf="@+id/guideline_left_ver"
-        app:srcCompat="@drawable/ic_marker_cross"
-        tools:ignore="ImageContrastCheck" />
+        <!-- Guidelines -->
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline_mid_ver"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.5" />
 
-    <ImageView
-        android:id="@+id/trackingPoint_2_1"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        app:layout_constraintEnd_toStartOf="@+id/guideline_right_ver"
-        app:layout_constraintStart_toStartOf="@+id/guideline_left_ver"
-        app:layout_constraintTop_toBottomOf="@id/guideline_top_hor"
-        app:srcCompat="@drawable/ic_marker_cross"
-        tools:ignore="ImageContrastCheck" />
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline_mid_hor"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent="0.5" />
 
-    <ImageView
-        android:id="@+id/trackingPoint_2_2"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        app:layout_constraintBottom_toTopOf="@+id/guideline_bottom_hor"
-        app:layout_constraintEnd_toStartOf="@+id/guideline_right_ver"
-        app:layout_constraintTop_toTopOf="@id/guideline_top_hor"
-        app:srcCompat="@drawable/ic_marker_cross"
-        tools:ignore="ImageContrastCheck" />
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline_left_ver"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.10" />
 
-    <ImageView
-        android:id="@+id/trackingPoint_2_4"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        app:layout_constraintBottom_toTopOf="@+id/guideline_bottom_hor"
-        app:layout_constraintStart_toEndOf="@id/guideline_left_ver"
-        app:layout_constraintTop_toTopOf="@id/guideline_top_hor"
-        app:srcCompat="@drawable/ic_marker_cross"
-        tools:ignore="ImageContrastCheck" />
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline_right_ver"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.90" />
 
-    <ImageView
-        android:id="@+id/trackingPoint_3_3"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        app:layout_constraintBottom_toTopOf="@+id/guideline_bottom_hor"
-        app:layout_constraintEnd_toStartOf="@+id/guideline_right_ver"
-        app:layout_constraintStart_toStartOf="@+id/trackingPoint_1_5"
-        app:layout_constraintTop_toTopOf="@+id/trackingPoint_1_5"
-        app:srcCompat="@drawable/ic_marker_cross"
-        tools:ignore="ImageContrastCheck" />
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline_top_hor"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent="0.05" />
 
-    <ImageView
-        android:id="@+id/trackingPoint_3_2"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        app:layout_constraintBottom_toBottomOf="@+id/trackingPoint_1_5"
-        app:layout_constraintEnd_toStartOf="@+id/guideline_right_ver"
-        app:layout_constraintStart_toStartOf="@+id/trackingPoint_1_5"
-        app:layout_constraintTop_toTopOf="@+id/guideline_top_hor"
-        app:srcCompat="@drawable/ic_marker_cross"
-        tools:ignore="ImageContrastCheck" />
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline_bottom_hor"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent="0.95" />
 
-    <ImageView
-        android:id="@+id/trackingPoint_3_4"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        app:layout_constraintBottom_toTopOf="@+id/guideline_bottom_hor"
-        app:layout_constraintEnd_toEndOf="@+id/trackingPoint_1_5"
-        app:layout_constraintStart_toStartOf="@+id/guideline_left_ver"
-        app:layout_constraintTop_toTopOf="@+id/trackingPoint_1_5"
-        app:srcCompat="@drawable/ic_marker_cross"
-        tools:ignore="ImageContrastCheck" />
+        <!-- Weitere Marker-Gruppen 2 und 3 -->
+        <ImageView
+            android:id="@+id/trackingPoint_2_3"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            app:layout_constraintBottom_toTopOf="@id/guideline_bottom_hor"
+            app:layout_constraintEnd_toStartOf="@+id/guideline_right_ver"
+            app:layout_constraintStart_toStartOf="@+id/guideline_left_ver"
+            app:srcCompat="@drawable/ic_marker_cross"
+            tools:ignore="ImageContrastCheck" />
 
-    <ImageView
-        android:id="@+id/trackingPoint_3_1"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        app:layout_constraintBottom_toBottomOf="@+id/trackingPoint_1_5"
-        app:layout_constraintEnd_toEndOf="@+id/trackingPoint_1_5"
-        app:layout_constraintStart_toStartOf="@+id/guideline_left_ver"
-        app:layout_constraintTop_toTopOf="@+id/guideline_top_hor"
-        app:srcCompat="@drawable/ic_marker_cross"
-        tools:ignore="ImageContrastCheck" />
+        <ImageView
+            android:id="@+id/trackingPoint_2_1"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            app:layout_constraintEnd_toStartOf="@+id/guideline_right_ver"
+            app:layout_constraintStart_toStartOf="@+id/guideline_left_ver"
+            app:layout_constraintTop_toBottomOf="@id/guideline_top_hor"
+            app:srcCompat="@drawable/ic_marker_cross"
+            tools:ignore="ImageContrastCheck" />
+
+        <ImageView
+            android:id="@+id/trackingPoint_2_2"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            app:layout_constraintBottom_toTopOf="@+id/guideline_bottom_hor"
+            app:layout_constraintEnd_toStartOf="@+id/guideline_right_ver"
+            app:layout_constraintTop_toTopOf="@id/guideline_top_hor"
+            app:srcCompat="@drawable/ic_marker_cross"
+            tools:ignore="ImageContrastCheck" />
+
+        <ImageView
+            android:id="@+id/trackingPoint_2_4"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            app:layout_constraintBottom_toTopOf="@+id/guideline_bottom_hor"
+            app:layout_constraintStart_toEndOf="@id/guideline_left_ver"
+            app:layout_constraintTop_toTopOf="@id/guideline_top_hor"
+            app:srcCompat="@drawable/ic_marker_cross"
+            tools:ignore="ImageContrastCheck" />
+
+        <ImageView
+            android:id="@+id/trackingPoint_3_3"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            app:layout_constraintBottom_toTopOf="@+id/guideline_bottom_hor"
+            app:layout_constraintEnd_toStartOf="@+id/guideline_right_ver"
+            app:layout_constraintStart_toStartOf="@+id/trackingPoint_1_5"
+            app:layout_constraintTop_toTopOf="@+id/trackingPoint_1_5"
+            app:srcCompat="@drawable/ic_marker_cross"
+            tools:ignore="ImageContrastCheck" />
+
+        <ImageView
+            android:id="@+id/trackingPoint_3_2"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            app:layout_constraintBottom_toBottomOf="@+id/trackingPoint_1_5"
+            app:layout_constraintEnd_toStartOf="@+id/guideline_right_ver"
+            app:layout_constraintStart_toStartOf="@+id/trackingPoint_1_5"
+            app:layout_constraintTop_toTopOf="@+id/guideline_top_hor"
+            app:srcCompat="@drawable/ic_marker_cross"
+            tools:ignore="ImageContrastCheck" />
+
+        <ImageView
+            android:id="@+id/trackingPoint_3_4"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            app:layout_constraintBottom_toTopOf="@+id/guideline_bottom_hor"
+            app:layout_constraintEnd_toEndOf="@+id/trackingPoint_1_5"
+            app:layout_constraintStart_toStartOf="@+id/guideline_left_ver"
+            app:layout_constraintTop_toTopOf="@+id/trackingPoint_1_5"
+            app:srcCompat="@drawable/ic_marker_cross"
+            tools:ignore="ImageContrastCheck" />
+
+        <ImageView
+            android:id="@+id/trackingPoint_3_1"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            app:layout_constraintBottom_toBottomOf="@+id/trackingPoint_1_5"
+            app:layout_constraintEnd_toEndOf="@+id/trackingPoint_1_5"
+            app:layout_constraintStart_toStartOf="@+id/guideline_left_ver"
+            app:layout_constraintTop_toTopOf="@+id/guideline_top_hor"
+            app:srcCompat="@drawable/ic_marker_cross"
+            tools:ignore="ImageContrastCheck" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Separater Scroll-Marker Layer (für dynamische Marker) -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/scrollMarkerLayer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:elevation="10dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <!-- Dynamische Marker werden hier programmatisch hinzugefügt -->
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

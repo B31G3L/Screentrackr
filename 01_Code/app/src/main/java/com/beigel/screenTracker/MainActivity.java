@@ -24,6 +24,7 @@ import java.util.ArrayList;
 
 /**
  * Hauptaktivität der App mit Einstellungsoptionen und Vorschau
+ * Angepasst für separaten Scroll-Marker Layer
  */
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
@@ -32,6 +33,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private Button buttonStart;
     private TextView footerText;
     private ConstraintLayout previewTrackingBackground;
+    private ConstraintLayout previewScrollMarkerLayer;
 
     private Spinner spinnerMarkerDensity;
     private Spinner spinnerMarkerSize;
@@ -43,8 +45,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private ArrayList<ImageView> trackingPointList2;
     private ArrayList<ImageView> trackingPointList3;
     private ArrayList<ImageView> trackingPointListE;
-    private ArrayList<ImageView> trackingPointListSV; // Scroll Vertical
-    private ArrayList<ImageView> trackingPointListSH; // Scroll Horizontal
 
     private TrackingValues trackingValues;
 
@@ -78,6 +78,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         footerText = findViewById(R.id.footer);
 
         previewTrackingBackground = findViewById(R.id.trackingBackground);
+        previewScrollMarkerLayer = findViewById(R.id.scrollMarkerLayer);
 
         spinnerMarkerDensity = findViewById(R.id.spinner_marker_density);
         spinnerMarkerSize = findViewById(R.id.spinner_marker_size);
@@ -94,45 +95,34 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         trackingPointList2 = new ArrayList<>();
         trackingPointList3 = new ArrayList<>();
         trackingPointListE = new ArrayList<>();
-        trackingPointListSV = new ArrayList<>();
-        trackingPointListSH = new ArrayList<>();
 
-        // Gruppe 1
+        // Gruppe 1 (Haupt-Layer)
         trackingPointList1.add(findViewById(R.id.trackingPoint_1_1));
         trackingPointList1.add(findViewById(R.id.trackingPoint_1_2));
         trackingPointList1.add(findViewById(R.id.trackingPoint_1_3));
         trackingPointList1.add(findViewById(R.id.trackingPoint_1_4));
         trackingPointList1.add(findViewById(R.id.trackingPoint_1_5));
 
-        // Gruppe 2
+        // Gruppe 2 (Haupt-Layer)
         trackingPointList2.add(findViewById(R.id.trackingPoint_2_1));
         trackingPointList2.add(findViewById(R.id.trackingPoint_2_2));
         trackingPointList2.add(findViewById(R.id.trackingPoint_2_3));
         trackingPointList2.add(findViewById(R.id.trackingPoint_2_4));
 
-        // Gruppe 3
+        // Gruppe 3 (Haupt-Layer)
         trackingPointList3.add(findViewById(R.id.trackingPoint_3_1));
         trackingPointList3.add(findViewById(R.id.trackingPoint_3_2));
         trackingPointList3.add(findViewById(R.id.trackingPoint_3_3));
         trackingPointList3.add(findViewById(R.id.trackingPoint_3_4));
 
-        // Eckmarker
+        // Eckmarker (Haupt-Layer)
         trackingPointListE.add(findViewById(R.id.trackingPoint_E_1));
         trackingPointListE.add(findViewById(R.id.trackingPoint_E_2));
         trackingPointListE.add(findViewById(R.id.trackingPoint_E_3));
         trackingPointListE.add(findViewById(R.id.trackingPoint_E_4));
 
-        // Scroll-Marker Vertikal
-        trackingPointListSV.add(findViewById(R.id.trackingPoint_SV_1));
-        trackingPointListSV.add(findViewById(R.id.trackingPoint_SV_2));
-        trackingPointListSV.add(findViewById(R.id.trackingPoint_SV_3));
-        trackingPointListSV.add(findViewById(R.id.trackingPoint_SV_4));
-
-        // Scroll-Marker Horizontal
-        trackingPointListSH.add(findViewById(R.id.trackingPoint_SH_1));
-        trackingPointListSH.add(findViewById(R.id.trackingPoint_SH_2));
-        trackingPointListSH.add(findViewById(R.id.trackingPoint_SH_3));
-        trackingPointListSH.add(findViewById(R.id.trackingPoint_SH_4));
+        // Für Scroll-Marker verwenden wir jetzt dynamische Marker-Vorschau
+        // (Keine statischen Scroll-Marker mehr im Layout)
     }
 
     private void setupSpinners() {
@@ -358,39 +348,25 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             createEdgeMarkersForGroup(trackingPointListE);
         }
 
-        // Scroll-Marker erstellen, falls ausgewählt
+        // Scroll-Marker Layer verwalten und erstellen
         createScrollMarkers();
     }
 
+    /**
+     * Zeigt eine Vorschau für aktivierte Scroll-Marker
+     */
     private void createScrollMarkers() {
         TrackingValues.ScrollMarkerType scrollType = trackingValues.getScrollMarker();
 
-        // Erstelle alle Scroll-Marker zurück
-        cleanScrollMarkers();
+        // Scroll-Layer immer ausblenden in der Vorschau
+        previewScrollMarkerLayer.setVisibility(View.GONE);
 
-        switch (scrollType) {
-            case VERTICAL:
-                createScrollMarkersForGroup(trackingPointListSV);
-                break;
-            case HORIZONTAL:
-                createScrollMarkersForGroup(trackingPointListSH);
-                break;
-            case NONE:
-            default:
-                // Keine Scroll-Marker anzeigen
-                break;
-        }
+        // Keine Scroll-Marker in der Vorschau anzeigen
     }
 
-    private void createScrollMarkersForGroup(ArrayList<ImageView> group) {
-        int markerType = R.drawable.ic_marker_scroll;
-        int markerColor = Color.parseColor(trackingValues.getMarkerColor());
 
-        for (ImageView marker : group) {
-            marker.setImageResource(markerType);
-            marker.setColorFilter(markerColor);
-        }
-    }
+
+
 
     private void createMarkersForGroup(ArrayList<ImageView> group) {
         int markerType = getMarkerDrawableResource();
@@ -442,7 +418,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
     private void cleanPreview() {
-        // Alle Marker-Bilder zurücksetzen
+        // Alle Haupt-Layer Marker-Bilder zurücksetzen
         for (ImageView marker : trackingPointList1) {
             marker.setImageResource(0);
         }
@@ -455,17 +431,13 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         for (ImageView marker : trackingPointListE) {
             marker.setImageResource(0);
         }
+
+        // Scroll-Marker zurücksetzen
         cleanScrollMarkers();
     }
 
     private void cleanScrollMarkers() {
-        // Scroll-Marker zurücksetzen
-        for (ImageView marker : trackingPointListSV) {
-            marker.setImageResource(0);
-        }
-        for (ImageView marker : trackingPointListSH) {
-            marker.setImageResource(0);
-        }
+        // Nichts zu tun, da keine Scroll-Marker in der Vorschau
     }
 
     @Override
