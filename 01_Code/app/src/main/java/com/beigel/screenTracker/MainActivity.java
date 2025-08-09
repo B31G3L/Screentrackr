@@ -24,7 +24,7 @@ import java.util.ArrayList;
 
 /**
  * Hauptaktivität der App mit Einstellungsoptionen und Vorschau
- * Angepasst für separaten Scroll-Marker Layer
+ * Angepasst für separaten Scroll-Marker Layer und Mehrsprachigkeit
  */
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
@@ -120,9 +120,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         trackingPointListE.add(findViewById(R.id.trackingPoint_E_2));
         trackingPointListE.add(findViewById(R.id.trackingPoint_E_3));
         trackingPointListE.add(findViewById(R.id.trackingPoint_E_4));
-
-        // Für Scroll-Marker verwenden wir jetzt dynamische Marker-Vorschau
-        // (Keine statischen Scroll-Marker mehr im Layout)
     }
 
     private void setupSpinners() {
@@ -199,18 +196,18 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
     private void setupButtons() {
-        // Start-Button
+        // Start-Button mit lokalisiertem Toast
         buttonStart.setOnClickListener(v -> {
             // Einstellungen speichern und Tracking-Screen starten
             Utilities.saveSettings(this, trackingValues);
-            Toast.makeText(this, "Einstellungen gespeichert", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.settings_saved), Toast.LENGTH_SHORT).show();
 
             Intent intent = new Intent(MainActivity.this, Trackingscreen.class);
             intent.putExtra("trackingValues", trackingValues);
             startActivity(intent);
         });
 
-        // Farb-Buttons
+        // Farb-Buttons mit lokalisierten Dialogen
         buttonBackgroundColor.setOnClickListener(this::showBackgroundColorDialog);
         buttonMarkerColor.setOnClickListener(this::showMarkerColorDialog);
     }
@@ -266,12 +263,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     private void showMarkerColorDialog(View view) {
         new ColorPickerDialog.Builder(this)
-                .setTitle("Marker-Farbe")
+                .setTitle(getString(R.string.color_picker_marker_title))
                 .setPreferenceName("MarkerColorPref")
-                .setPositiveButton("Bestätigen", (ColorEnvelopeListener) (envelope, fromUser) -> {
+                .setPositiveButton(getString(R.string.color_picker_confirm), (ColorEnvelopeListener) (envelope, fromUser) -> {
                     setMarkerColor(envelope);
                 })
-                .setNegativeButton("Abbrechen", (dialogInterface, i) -> dialogInterface.dismiss())
+                .setNegativeButton(getString(R.string.color_picker_cancel), (dialogInterface, i) -> dialogInterface.dismiss())
                 .attachAlphaSlideBar(true)
                 .attachBrightnessSlideBar(true)
                 .show();
@@ -279,12 +276,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     private void showBackgroundColorDialog(View view) {
         new ColorPickerDialog.Builder(this)
-                .setTitle("Hintergrundfarbe")
+                .setTitle(getString(R.string.color_picker_background_title))
                 .setPreferenceName("BackgroundColorPref")
-                .setPositiveButton("Bestätigen", (ColorEnvelopeListener) (envelope, fromUser) -> {
+                .setPositiveButton(getString(R.string.color_picker_confirm), (ColorEnvelopeListener) (envelope, fromUser) -> {
                     setBackgroundColor(envelope);
                 })
-                .setNegativeButton("Abbrechen", (dialogInterface, i) -> dialogInterface.dismiss())
+                .setNegativeButton(getString(R.string.color_picker_cancel), (dialogInterface, i) -> dialogInterface.dismiss())
                 .attachAlphaSlideBar(true)
                 .attachBrightnessSlideBar(true)
                 .show();
@@ -363,10 +360,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         // Keine Scroll-Marker in der Vorschau anzeigen
     }
-
-
-
-
 
     private void createMarkersForGroup(ArrayList<ImageView> group) {
         int markerType = getMarkerDrawableResource();

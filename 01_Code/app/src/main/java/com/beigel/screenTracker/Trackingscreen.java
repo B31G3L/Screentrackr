@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 /**
- * Vollbildschirm-Tracking-Ansicht mit einfachem unendlichem Scrolling
+ * Vollbildschirm-Tracking-Ansicht mit verbessertem unendlichem Scrolling
  */
 public class Trackingscreen extends AppCompatActivity implements GestureDetector.OnGestureListener {
 
@@ -47,12 +47,18 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
     private int screenWidth;
     private int screenHeight;
 
-    // Basis-Positionen der 4 Start-Marker (näher zur Mitte)
-    private static final float[] BASE_POSITIONS_X = {-0.15f, 0.15f, 0.15f, -0.15f}; // Näher zur Mitte
-    private static final float[] BASE_POSITIONS_Y = {-0.15f, -0.15f, 0.15f, 0.15f}; // Näher zur Mitte
-    private static final int MARKER_SPACING = 500; // Größerer Abstand zwischen Markern in px
-    private static final int MAX_MARKERS = 100; // Mehr Marker für unendliches Scrollen
-    private static final int CLEANUP_DISTANCE = MARKER_SPACING * 3; // Entfernungsgrenze für Cleanup
+    // Separate Basis-Positionen für verschiedene Scroll-Modi
+    // Für vertikales Scrollen: Links und Rechts
+    private static final float[] VERTICAL_BASE_X = {-0.4f, 0.4f}; // Links und Rechts
+    private static final float[] VERTICAL_BASE_Y = {0.0f, 0.0f};  // Beide in der Mitte
+
+    // Für horizontales Scrollen: Oben und Unten
+    private static final float[] HORIZONTAL_BASE_X = {0.0f, 0.0f};  // Beide in der Mitte
+    private static final float[] HORIZONTAL_BASE_Y = {-0.4f, 0.4f}; // Oben und Unten
+    private static final int MARKER_SPACING = 800; // Größerer Abstand zwischen Markern in px
+    private static final int MAX_MARKERS = 200; // Mehr Marker für echtes unendliches Scrollen
+    private static final int CLEANUP_DISTANCE = MARKER_SPACING * 6; // Größerer Cleanup-Bereich
+    private static final int GENERATION_BUFFER = MARKER_SPACING * 4; // Buffer für Marker-Generierung
 
     // Momentum Scrolling
     private float velocityX = 0f;
@@ -285,13 +291,29 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
     }
 
     /**
-     * Erstellt die 4 initialen Scroll-Marker an den Basis-Positionen
+     * Erstellt die initialen Scroll-Marker basierend auf dem Scroll-Typ
      */
     private void createInitialScrollMarkers() {
-        for (int i = 0; i < 4; i++) {
-            float worldX = BASE_POSITIONS_X[i] * screenWidth;
-            float worldY = BASE_POSITIONS_Y[i] * screenHeight;
-            createDynamicMarker(worldX, worldY, i);
+        TrackingValues.ScrollMarkerType scrollType = trackingValues.getScrollMarker();
+
+        switch (scrollType) {
+            case VERTICAL:
+                // Nur 2 Marker: Links und Rechts
+                for (int i = 0; i < 2; i++) {
+                    float worldX = VERTICAL_BASE_X[i] * screenWidth;
+                    float worldY = VERTICAL_BASE_Y[i] * screenHeight;
+                    createDynamicMarker(worldX, worldY, i);
+                }
+                break;
+
+            case HORIZONTAL:
+                // Nur 2 Marker: Oben und Unten
+                for (int i = 0; i < 2; i++) {
+                    float worldX = HORIZONTAL_BASE_X[i] * screenWidth;
+                    float worldY = HORIZONTAL_BASE_Y[i] * screenHeight;
+                    createDynamicMarker(worldX, worldY, i);
+                }
+                break;
         }
     }
 
@@ -299,9 +321,16 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
      * Erstellt einen neuen dynamischen Marker an der angegebenen Weltposition
      */
     private void createDynamicMarker(float worldX, float worldY, int markerIndex) {
-        // Stoppe wenn maximale Anzahl erreicht ist
+        // Wenn maximale Anzahl erreicht ist, entferne zuerst weit entfernte Marker
         if (dynamicScrollMarkers.size() >= MAX_MARKERS) {
-            return; // Vereinfacht: Stoppe einfach, ohne zu entfernen
+            removeFarMarkers(); // Cleanup vor dem Hinzufügen neuer Marker
+
+            // Falls immer noch zu viele Marker vorhanden sind, entferne die ältesten
+            if (dynamicScrollMarkers.size() >= MAX_MARKERS) {
+                DynamicMarker oldestMarker = dynamicScrollMarkers.get(0);
+                scrollMarkerLayer.removeView(oldestMarker.imageView);
+                dynamicScrollMarkers.remove(0);
+            }
         }
 
         // Debug: Marker-Erstellung ausgeben
@@ -386,9 +415,20 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
     private void addNewMarkers() {
         TrackingValues.ScrollMarkerType scrollType = trackingValues.getScrollMarker();
 
-        // Für jeden der 4 Basis-Marker prüfen, ob neue Marker hinzugefügt werden müssen
-        for (int i = 0; i < 4; i++) {
-            checkAndAddMarkersForBase(i, scrollType);
+        switch (scrollType) {
+            case VERTICAL:
+                // Nur für die 2 vertikalen Basis-Positionen (Links und Rechts)
+                for (int i = 0; i < 2; i++) {
+                    checkAndAddMarkersForBase(i, scrollType);
+                }
+                break;
+
+            case HORIZONTAL:
+                // Nur für die 2 horizontalen Basis-Positionen (Oben und Unten)
+                for (int i = 0; i < 2; i++) {
+                    checkAndAddMarkersForBase(i, scrollType);
+                }
+                break;
         }
     }
 
@@ -396,49 +436,61 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
      * Prüft und fügt neue Marker für eine bestimmte Basis-Position hinzu
      */
     private void checkAndAddMarkersForBase(int baseIndex, TrackingValues.ScrollMarkerType scrollType) {
-        float baseWorldX = BASE_POSITIONS_X[baseIndex] * screenWidth;
-        float baseWorldY = BASE_POSITIONS_Y[baseIndex] * screenHeight;
+        float baseWorldX, baseWorldY;
 
         switch (scrollType) {
             case VERTICAL:
+                baseWorldX = VERTICAL_BASE_X[baseIndex] * screenWidth;
+                baseWorldY = VERTICAL_BASE_Y[baseIndex] * screenHeight;
                 // Vertikal scrollen - neue Marker oben und unten hinzufügen
-                addMarkersInLine(baseWorldX, baseWorldY, baseIndex, 0, MARKER_SPACING); // Vertikal
+                addMarkersInLine(baseWorldX, baseWorldY, baseIndex, 0, MARKER_SPACING);
                 break;
 
             case HORIZONTAL:
+                baseWorldX = HORIZONTAL_BASE_X[baseIndex] * screenWidth;
+                baseWorldY = HORIZONTAL_BASE_Y[baseIndex] * screenHeight;
                 // Horizontal scrollen - neue Marker links und rechts hinzufügen
-                addMarkersInLine(baseWorldX, baseWorldY, baseIndex, MARKER_SPACING, 0); // Horizontal
+                addMarkersInLine(baseWorldX, baseWorldY, baseIndex, MARKER_SPACING, 0);
                 break;
         }
     }
 
     /**
-     * Fügt Marker in einer Linie hinzu (vereinfacht)
+     * Verbesserte Marker-Erstellung für echtes unendliches Scrollen
      */
     private void addMarkersInLine(float baseX, float baseY, int baseIndex, float deltaX, float deltaY) {
         // Berechne aktuelle Scroll-Position
         float currentScrollX = totalScrollX;
         float currentScrollY = totalScrollY;
 
-        // Berechne wie viele Marker wir in jede Richtung brauchen
-        int markersNeeded = 5; // Anzahl Marker in jede Richtung
+        // Berechne wie weit wir von der Basis-Position entfernt sind
+        float offsetX = 0;
+        float offsetY = 0;
 
-        // Positive Richtung (rechts/unten)
-        for (int i = 1; i <= markersNeeded; i++) {
-            float newWorldX = baseX + deltaX * i;
-            float newWorldY = baseY + deltaY * i;
-
-            if (isMarkerNeeded(newWorldX, newWorldY, currentScrollX, currentScrollY)) {
-                if (!markerExistsAt(newWorldX, newWorldY)) {
-                    createDynamicMarker(newWorldX, newWorldY, baseIndex);
-                }
-            }
+        if (deltaX != 0) { // Horizontal scrolling
+            offsetX = currentScrollX;
+        }
+        if (deltaY != 0) { // Vertical scrolling
+            offsetY = currentScrollY;
         }
 
-        // Negative Richtung (links/oben)
-        for (int i = 1; i <= markersNeeded; i++) {
-            float newWorldX = baseX - deltaX * i;
-            float newWorldY = baseY - deltaY * i;
+        // Berechne den Index-Bereich basierend auf der aktuellen Position
+        int centerIndexX = Math.round(offsetX / MARKER_SPACING);
+        int centerIndexY = Math.round(offsetY / MARKER_SPACING);
+
+        // Erstelle Marker in einem großen Bereich um die aktuelle Position
+        int range = 10; // Marker in beide Richtungen erstellen
+
+        for (int i = -range; i <= range; i++) {
+            float newWorldX = baseX;
+            float newWorldY = baseY;
+
+            if (deltaX != 0) {
+                newWorldX = baseX + deltaX * (centerIndexX + i);
+            }
+            if (deltaY != 0) {
+                newWorldY = baseY + deltaY * (centerIndexY + i);
+            }
 
             if (isMarkerNeeded(newWorldX, newWorldY, currentScrollX, currentScrollY)) {
                 if (!markerExistsAt(newWorldX, newWorldY)) {
@@ -449,24 +501,24 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
     }
 
     /**
-     * Prüft ob ein Marker an dieser Position benötigt wird
+     * Verbesserte Marker-Bedarfs-Prüfung für unendliches Scrollen
      */
     private boolean isMarkerNeeded(float worldX, float worldY, float scrollX, float scrollY) {
         // Berechne Screen-Position relativ zur aktuellen Scroll-Position
         float screenX = worldX - scrollX + screenWidth / 2f;
         float screenY = worldY - scrollY + screenHeight / 2f;
 
-        // Marker wird benötigt wenn er im erweiterten sichtbaren Bereich liegt
-        int buffer = MARKER_SPACING * 2; // Größerer Puffer für smooth scrolling
+        // Großer Buffer für unendliches Scrollen - Marker werden weit voraus generiert
+        int buffer = GENERATION_BUFFER; // 4 * MARKER_SPACING = 3200px Buffer
         return screenX >= -buffer && screenX <= screenWidth + buffer &&
                 screenY >= -buffer && screenY <= screenHeight + buffer;
     }
 
     /**
-     * Prüft ob bereits ein Marker an der angegebenen Position existiert
+     * Optimierte Marker-Erkennung für unendliches Scrollen
      */
     private boolean markerExistsAt(float worldX, float worldY) {
-        float tolerance = MARKER_SPACING / 4f; // Toleranz basierend auf Marker-Abstand
+        float tolerance = MARKER_SPACING / 4f; // Kleinere Toleranz für präzisere Platzierung
 
         for (DynamicMarker marker : dynamicScrollMarkers) {
             if (Math.abs(marker.worldX - worldX) < tolerance && Math.abs(marker.worldY - worldY) < tolerance) {
@@ -549,8 +601,10 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
                 break;
         }
 
-        // Debug: Scroll-Position ausgeben
-        System.out.println("Scroll - X: " + totalScrollX + ", Y: " + totalScrollY + ", VelX: " + velocityX + ", VelY: " + velocityY);
+        // Debug: Scroll-Position und Marker-Anzahl ausgeben
+        System.out.println("Scroll - X: " + totalScrollX + ", Y: " + totalScrollY +
+                ", VelX: " + velocityX + ", VelY: " + velocityY +
+                ", Markers: " + dynamicScrollMarkers.size());
 
         // Dynamische Marker aktualisieren
         updateDynamicMarkers();

@@ -1,0 +1,78 @@
+<resources>
+    <!-- App Info -->
+    <string name="app_name">Screentrackr</string>
+
+    <!-- Settings Labels -->
+    <string name="settings_title">Einstellungen</string>
+    <string name="value_background_color">Hintergrundfarbe</string>
+    <string name="value_marker_color">Marker-Farbe</string>
+    <string name="value_marker_density">Marker-Dichte</string>
+    <string name="value_marker_size">Marker-Größe</string>
+    <string name="value_marker_type">Marker-Typ</string>
+    <string name="value_edge_marker">Eckmarker</string>
+    <string name="value_scroll_marker">Scroll-Marker</string>
+
+    <!-- Color Picker -->
+    <string name="color_picker_background_title">Hintergrundfarbe</string>
+    <string name="color_picker_marker_title">Marker-Farbe</string>
+    <string name="color_picker_confirm">Bestätigen</string>
+    <string name="color_picker_cancel">Abbrechen</string>
+
+    <!-- Button Labels -->
+    <string name="button_text_start">Tracking starten</string>
+    <string name="button_background">Hintergrund</string>
+    <string name="button_marker">Marker</string>
+
+    <!-- Settings Saved -->
+    <string name="settings_saved">Einstellungen gespeichert</string>
+
+    <!-- Footer -->
+    <string name="footerLink">© 2025 <a href="https://b31g3l.github.io/">Beigel</a>\nin Zusammenarbeit mit <a href="https://www.overmind-studios.de/">Overmind Studios</a>\nauch verfügbar im <a href="https://www.overmind-studios.de/screentrackr">Browser</a></string>
+
+    <!-- Marker Types -->
+    <string-array name="marker_type_array">
+        <item>Tortenstück</item>
+        <item>Kreis</item>
+        <item>Dreieck</item>
+        <item>Kreuz</item>
+    </string-array>
+
+    <!-- Edge Markers -->
+    <string-array name="edge_markers_array">
+        <item>Keine</item>
+        <item>Ecken</item>
+        <item>Halbkreis</item>
+    </string-array>
+
+    <!-- Scroll Markers -->
+    <string-array name="scroll_markers_array">
+        <item>Keine</item>
+        <item>Vertikal</item>
+        <item>Horizontal</item>
+    </string-array>
+
+    <!-- Marker Density -->
+    <string-array name="marker_density_array">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </string-array>
+
+    <!-- Marker Size -->
+    <string-array name="edge_size_array">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+    </string-array>
+
+    <!-- Content Descriptions for Accessibility -->
+    <string name="content_description_logo">Screentrackr Logo</string>
+    <string name="content_description_marker">Tracking-Marker</string>
+
+    <!-- Instructions -->
+    <string name="instruction_tap_to_exit">Tippen zum Beenden des Trackings</string>
+    <string name="instruction_swipe_to_scroll">Wischen zum Scrollen der Marker</string>
+</resources>
