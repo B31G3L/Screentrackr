@@ -1,6 +1,5 @@
 package com.beigel.screenTracker;
 
-import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.GestureDetector;
@@ -48,25 +47,18 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
     private int screenHeight;
 
     // Separate Basis-Positionen für verschiedene Scroll-Modi
-    // Für vertikales Scrollen: Links und Rechts
-    private static final float[] VERTICAL_BASE_X = {-0.4f, 0.4f}; // Links und Rechts
-    private static final float[] VERTICAL_BASE_Y = {0.0f, 0.0f};  // Beide in der Mitte
+    // Für vertikales Scrollen: Links und Rechts bei 33% und 66%
+    private static final float[] VERTICAL_BASE_X = {-0.25f, 0.25f}; // Bei 33% und 67% horizontal
+    private static final float[] VERTICAL_BASE_Y = {0.0f, 0.0f};    // Beide in der Mitte
 
-    // Für horizontales Scrollen: Oben und Unten
-    private static final float[] HORIZONTAL_BASE_X = {0.0f, 0.0f};  // Beide in der Mitte
-    private static final float[] HORIZONTAL_BASE_Y = {-0.4f, 0.4f}; // Oben und Unten
+    // Für horizontales Scrollen: Oben und Unten bei 33% und 66%
+    private static final float[] HORIZONTAL_BASE_X = {0.0f, 0.0f};    // Beide in der Mitte
+    private static final float[] HORIZONTAL_BASE_Y = {-0.25f, 0.25f}; // Bei 33% und 67% vertikal
+
     private static final int MARKER_SPACING = 800; // Größerer Abstand zwischen Markern in px
     private static final int MAX_MARKERS = 200; // Mehr Marker für echtes unendliches Scrollen
     private static final int CLEANUP_DISTANCE = MARKER_SPACING * 6; // Größerer Cleanup-Bereich
     private static final int GENERATION_BUFFER = MARKER_SPACING * 4; // Buffer für Marker-Generierung
-
-    // Momentum Scrolling
-    private float velocityX = 0f;
-    private float velocityY = 0f;
-    private static final float MOMENTUM_DECAY = 0.95f; // Abbremsung (näher zu 1 = langsamer Stopp)
-    private static final float MIN_VELOCITY = 5f; // Mindestgeschwindigkeit bevor Stopp
-    private boolean isMomentumScrolling = false;
-    private final android.os.Handler momentumHandler = new android.os.Handler();
 
     /**
      * Klasse für dynamische Marker mit Position
@@ -363,13 +355,19 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
 
     /**
      * Aktualisiert die Position eines Markers basierend auf der Weltposition und aktuellen Scroll-Offset
+     * Positioniert den Marker zentriert, nicht an der oberen linken Ecke
      */
     private void updateMarkerPosition(ImageView marker, float worldX, float worldY) {
         float screenX = worldX - totalScrollX + screenWidth / 2f;
         float screenY = worldY - totalScrollY + screenHeight / 2f;
 
-        marker.setX(screenX);
-        marker.setY(screenY);
+        // Marker-Größe berücksichtigen für zentrierte Positionierung
+        int markerSize = marker.getLayoutParams().width;
+        float centeredX = screenX - (markerSize / 2f);
+        float centeredY = screenY - (markerSize / 2f);
+
+        marker.setX(centeredX);
+        marker.setY(centeredY);
     }
 
     /**
@@ -559,8 +557,6 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
 
     @Override
     public boolean onDown(@NonNull MotionEvent e) {
-        // Stoppe Momentum-Scrolling wenn User wieder berührt
-        stopMomentumScrolling();
         return true;
     }
 
@@ -584,26 +580,19 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
             return false;
         }
 
-        // Stoppe eventuelles Momentum-Scrolling
-        stopMomentumScrolling();
-
-        // Scroll-Position aktualisieren
+        // Scroll-Position direkt aktualisieren (normale Richtung)
         switch (scrollType) {
             case VERTICAL:
-                totalScrollY += distanceY;
-                // Geschwindigkeit für Momentum trackieren (invertiert weil distanceY umgekehrt ist)
-                velocityY = -distanceY * 2; // Verstärkung für besseres Momentum
+                totalScrollY += distanceY; // Plus für normale Richtung
                 break;
             case HORIZONTAL:
-                totalScrollX += distanceX;
-                // Geschwindigkeit für Momentum trackieren (invertiert weil distanceX umgekehrt ist)
-                velocityX = -distanceX * 2; // Verstärkung für besseres Momentum
+                totalScrollX += distanceX; // Plus für normale Richtung
                 break;
         }
 
         // Debug: Scroll-Position und Marker-Anzahl ausgeben
         System.out.println("Scroll - X: " + totalScrollX + ", Y: " + totalScrollY +
-                ", VelX: " + velocityX + ", VelY: " + velocityY +
+                ", dX: " + distanceX + ", dY: " + distanceY +
                 ", Markers: " + dynamicScrollMarkers.size());
 
         // Dynamische Marker aktualisieren
@@ -619,126 +608,23 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
 
     @Override
     public boolean onFling(@NonNull MotionEvent e1, @NonNull MotionEvent e2, float velocityX, float velocityY) {
-        TrackingValues.ScrollMarkerType scrollType = trackingValues.getScrollMarker();
-
-        if (scrollType == TrackingValues.ScrollMarkerType.NONE) {
-            return false;
-        }
-
-        // Setze Momentum-Geschwindigkeiten basierend auf Fling
-        switch (scrollType) {
-            case VERTICAL:
-                this.velocityY = velocityY / 10f; // Skaliere die Geschwindigkeit runter
-                break;
-            case HORIZONTAL:
-                this.velocityX = velocityX / 10f; // Skaliere die Geschwindigkeit runter
-                break;
-        }
-
-        // Starte Momentum-Scrolling
-        startMomentumScrolling();
-
-        return true;
+        // Momentum-Scrolling entfernt - keine Aktion erforderlich
+        return false;
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        boolean gestureResult = gestureDetector.onTouchEvent(event);
-
-        // Prüfe auf ACTION_UP um Momentum-Scrolling zu starten
-        if (event.getAction() == MotionEvent.ACTION_UP) {
-            TrackingValues.ScrollMarkerType scrollType = trackingValues.getScrollMarker();
-
-            if (scrollType != TrackingValues.ScrollMarkerType.NONE) {
-                // Starte Momentum-Scrolling mit aktueller Geschwindigkeit
-                if (Math.abs(velocityX) > MIN_VELOCITY || Math.abs(velocityY) > MIN_VELOCITY) {
-                    startMomentumScrolling();
-                }
-            }
-        }
-
-        return gestureResult || super.onTouchEvent(event);
+        return gestureDetector.onTouchEvent(event) || super.onTouchEvent(event);
     }
-
-    /**
-     * Startet das Momentum-Scrolling
-     */
-    private void startMomentumScrolling() {
-        if (isMomentumScrolling) {
-            return; // Bereits aktiv
-        }
-
-        isMomentumScrolling = true;
-        momentumHandler.post(momentumRunnable);
-
-        System.out.println("Starting momentum scrolling - VelX: " + velocityX + ", VelY: " + velocityY);
-    }
-
-    /**
-     * Stoppt das Momentum-Scrolling
-     */
-    private void stopMomentumScrolling() {
-        if (isMomentumScrolling) {
-            isMomentumScrolling = false;
-            momentumHandler.removeCallbacks(momentumRunnable);
-            System.out.println("Stopping momentum scrolling");
-        }
-    }
-
-    /**
-     * Runnable für Momentum-Scrolling
-     */
-    private final Runnable momentumRunnable = new Runnable() {
-        @Override
-        public void run() {
-            if (!isMomentumScrolling) {
-                return;
-            }
-
-            TrackingValues.ScrollMarkerType scrollType = trackingValues.getScrollMarker();
-            boolean hasMovement = false;
-
-            // Aktualisiere Position basierend auf Geschwindigkeit
-            switch (scrollType) {
-                case VERTICAL:
-                    if (Math.abs(velocityY) > MIN_VELOCITY) {
-                        totalScrollY += velocityY;
-                        velocityY *= MOMENTUM_DECAY; // Abbremsung
-                        hasMovement = true;
-                    }
-                    break;
-                case HORIZONTAL:
-                    if (Math.abs(velocityX) > MIN_VELOCITY) {
-                        totalScrollX += velocityX;
-                        velocityX *= MOMENTUM_DECAY; // Abbremsung
-                        hasMovement = true;
-                    }
-                    break;
-            }
-
-            if (hasMovement) {
-                // Marker aktualisieren
-                updateDynamicMarkers();
-
-                // Für nächsten Frame planen (60 FPS = 16ms)
-                momentumHandler.postDelayed(this, 16);
-            } else {
-                // Momentum-Scrolling beenden
-                stopMomentumScrolling();
-            }
-        }
-    };
 
     @Override
     protected void onPause() {
         super.onPause();
-        stopMomentumScrolling(); // Momentum-Scrolling pausieren
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        stopMomentumScrolling(); // Momentum-Scrolling beenden
         clearDynamicMarkers();
         binding = null;
     }

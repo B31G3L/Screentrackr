@@ -196,11 +196,19 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
     private void setupButtons() {
-        // Start-Button mit lokalisiertem Toast
+        // Start-Button mit lokalisiertem Toast und Fallback
         buttonStart.setOnClickListener(v -> {
             // Einstellungen speichern und Tracking-Screen starten
             Utilities.saveSettings(this, trackingValues);
-            Toast.makeText(this, getString(R.string.settings_saved), Toast.LENGTH_SHORT).show();
+
+            String message = "Settings saved";
+            try {
+                message = getString(R.string.settings_saved);
+            } catch (Exception e) {
+                System.out.println("Using fallback string for settings saved message");
+            }
+
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
 
             Intent intent = new Intent(MainActivity.this, Trackingscreen.class);
             intent.putExtra("trackingValues", trackingValues);
@@ -261,61 +269,105 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         setOptimalTextColor(buttonMarkerColor, markerColor);
     }
 
-    private void showMarkerColorDialog(View view) {
-        new ColorPickerDialog.Builder(this)
-                .setTitle(getString(R.string.color_picker_marker_title))
-                .setPreferenceName("MarkerColorPref")
-                .setPositiveButton(getString(R.string.color_picker_confirm), (ColorEnvelopeListener) (envelope, fromUser) -> {
-                    setMarkerColor(envelope);
-                })
-                .setNegativeButton(getString(R.string.color_picker_cancel), (dialogInterface, i) -> dialogInterface.dismiss())
-                .attachAlphaSlideBar(true)
-                .attachBrightnessSlideBar(true)
-                .show();
-    }
-
     private void showBackgroundColorDialog(View view) {
+        String title = "Background Color";
+        String confirm = "Confirm";
+        String cancel = "Cancel";
+
+        try {
+            title = getString(R.string.color_picker_background_title);
+            confirm = getString(R.string.color_picker_confirm);
+            cancel = getString(R.string.color_picker_cancel);
+        } catch (Exception e) {
+            System.out.println("Using fallback strings for background color dialog");
+        }
+
         new ColorPickerDialog.Builder(this)
-                .setTitle(getString(R.string.color_picker_background_title))
+                .setTitle(title)
                 .setPreferenceName("BackgroundColorPref")
-                .setPositiveButton(getString(R.string.color_picker_confirm), (ColorEnvelopeListener) (envelope, fromUser) -> {
+                .setPositiveButton(confirm, (ColorEnvelopeListener) (envelope, fromUser) -> {
                     setBackgroundColor(envelope);
                 })
-                .setNegativeButton(getString(R.string.color_picker_cancel), (dialogInterface, i) -> dialogInterface.dismiss())
-                .attachAlphaSlideBar(true)
+                .setNegativeButton(cancel, (dialogInterface, i) -> dialogInterface.dismiss())
+                .attachAlphaSlideBar(false)
                 .attachBrightnessSlideBar(true)
+                .setBottomSpace(12)
                 .show();
     }
 
-    private void setMarkerColor(ColorEnvelope envelope) {
-        String hexCode = envelope.getHexCode();
-        if (hexCode != null && !hexCode.isEmpty()) {
-            String colorCode = "#" + hexCode;
-            int color = Color.parseColor(colorCode);
+    private void showMarkerColorDialog(View view) {
+        String title = "Marker Color";
+        String confirm = "Confirm";
+        String cancel = "Cancel";
 
-            buttonMarkerColor.setBackgroundColor(color);
-            setOptimalTextColor(buttonMarkerColor, color);
-
-            trackingValues.setMarkerColor(colorCode);
-            createPreview();
+        try {
+            title = getString(R.string.color_picker_marker_title);
+            confirm = getString(R.string.color_picker_confirm);
+            cancel = getString(R.string.color_picker_cancel);
+        } catch (Exception e) {
+            System.out.println("Using fallback strings for marker color dialog");
         }
+
+        new ColorPickerDialog.Builder(this)
+                .setTitle(title)
+                .setPreferenceName("MarkerColorPref")
+                .setPositiveButton(confirm, (ColorEnvelopeListener) (envelope, fromUser) -> {
+                    setMarkerColor(envelope);
+                })
+                .setNegativeButton(cancel, (dialogInterface, i) -> dialogInterface.dismiss())
+                .attachAlphaSlideBar(false)
+                .attachBrightnessSlideBar(true)
+                .setBottomSpace(12)
+                .show();
     }
 
     private void setBackgroundColor(ColorEnvelope envelope) {
         String hexCode = envelope.getHexCode();
         if (hexCode != null && !hexCode.isEmpty()) {
             String colorCode = "#" + hexCode;
-            int color = Color.parseColor(colorCode);
 
-            buttonBackgroundColor.setBackgroundColor(color);
-            setOptimalTextColor(buttonBackgroundColor, color);
+            try {
+                int color = Color.parseColor(colorCode);
 
-            trackingValues.setBackgroundColor(colorCode);
-            createPreview();
+                buttonBackgroundColor.setBackgroundColor(color);
+                setOptimalTextColor(buttonBackgroundColor, color);
+
+                trackingValues.setBackgroundColor(colorCode);
+                createPreview();
+
+                System.out.println("Background color set to: " + colorCode);
+            } catch (IllegalArgumentException e) {
+                System.out.println("Invalid color code: " + colorCode);
+                Toast.makeText(this, "Invalid color selected", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private void setMarkerColor(ColorEnvelope envelope) {
+        String hexCode = envelope.getHexCode();
+        if (hexCode != null && !hexCode.isEmpty()) {
+            String colorCode = "#" + hexCode;
+
+            try {
+                int color = Color.parseColor(colorCode);
+
+                buttonMarkerColor.setBackgroundColor(color);
+                setOptimalTextColor(buttonMarkerColor, color);
+
+                trackingValues.setMarkerColor(colorCode);
+                createPreview();
+
+                System.out.println("Marker color set to: " + colorCode);
+            } catch (IllegalArgumentException e) {
+                System.out.println("Invalid color code: " + colorCode);
+                Toast.makeText(this, "Invalid color selected", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
     private void createPreview() {
+        System.out.println("Creating preview with marker type: " + trackingValues.getMarkerType());
+
         cleanPreview();
 
         // Hintergrundfarbe setzen
@@ -325,15 +377,19 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         // Marker basierend auf Dichte erstellen
         switch (trackingValues.getMarkerDensity()) {
             case 0:
+                System.out.println("No markers (density 0)");
                 break;
             case 1:
+                System.out.println("Creating marker group 1");
                 createMarkersForGroup(trackingPointList1);
                 break;
             case 2:
+                System.out.println("Creating marker groups 1 and 2");
                 createMarkersForGroup(trackingPointList1);
                 createMarkersForGroup(trackingPointList2);
                 break;
             case 3:
+                System.out.println("Creating marker groups 1, 2 and 3");
                 createMarkersForGroup(trackingPointList1);
                 createMarkersForGroup(trackingPointList2);
                 createMarkersForGroup(trackingPointList3);
@@ -341,8 +397,17 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         }
 
         // Eckmarker erstellen, falls ausgewählt
-        if (trackingValues.getEdgeMarker() != TrackingValues.EdgeMarkerType.NONE) {
+        TrackingValues.EdgeMarkerType edgeType = trackingValues.getEdgeMarker();
+        if (edgeType != TrackingValues.EdgeMarkerType.NONE) {
+            System.out.println("Creating edge markers: " + edgeType);
             createEdgeMarkersForGroup(trackingPointListE);
+        } else {
+            System.out.println("No edge markers (NONE selected)");
+            // Sicherstellen, dass Eckmarker ausgeblendet sind
+            for (ImageView marker : trackingPointListE) {
+                marker.setImageResource(0);
+                marker.clearColorFilter();
+            }
         }
 
         // Scroll-Marker Layer verwalten und erstellen
@@ -366,6 +431,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         int markerSize = Utilities.getMarkerSize(trackingValues.getMarkerSize());
         int markerColor = Color.parseColor(trackingValues.getMarkerColor());
 
+        System.out.println("Creating markers - Type: " + trackingValues.getMarkerType() +
+                ", Resource: " + markerType + ", Size: " + markerSize);
+
         for (ImageView marker : group) {
             marker.setImageResource(markerType);
             marker.getLayoutParams().height = markerSize;
@@ -379,6 +447,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         int edgeMarkerType = getEdgeMarkerDrawableResource();
         int markerColor = Color.parseColor(trackingValues.getMarkerColor());
 
+        System.out.println("Creating edge markers - Type: " + trackingValues.getEdgeMarker() +
+                ", Resource: " + edgeMarkerType);
+
         for (ImageView marker : group) {
             marker.setImageResource(edgeMarkerType);
             marker.setColorFilter(markerColor);
@@ -386,31 +457,47 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
     private int getMarkerDrawableResource() {
-        switch (trackingValues.getMarkerType()) {
+        TrackingValues.MarkerType currentType = trackingValues.getMarkerType();
+        System.out.println("Getting drawable for marker type: " + currentType);
+
+        switch (currentType) {
             case PIE:
+                System.out.println("Returning PIE drawable");
                 return R.drawable.ic_marker_pie;
             case CIRCLE:
+                System.out.println("Returning CIRCLE drawable");
                 return R.drawable.ic_marker_circle;
             case TRIANGLE:
+                System.out.println("Returning TRIANGLE drawable");
                 return R.drawable.ic_marker_triangle;
             case CROSS:
             default:
+                System.out.println("Returning CROSS drawable (default)");
                 return R.drawable.ic_marker_cross;
         }
     }
 
     private int getEdgeMarkerDrawableResource() {
-        switch (trackingValues.getEdgeMarker()) {
+        TrackingValues.EdgeMarkerType currentType = trackingValues.getEdgeMarker();
+        System.out.println("Getting drawable for edge marker type: " + currentType);
+
+        switch (currentType) {
             case CORNER:
+                System.out.println("Returning CORNER edge drawable");
                 return R.drawable.ic_marker_cross_edge;
             case SEMICIRCLE:
+                System.out.println("Returning SEMICIRCLE edge drawable");
                 return R.drawable.ic_marker_circle_edge;
+            case NONE:
             default:
+                System.out.println("No edge marker (NONE)");
                 return 0;
         }
     }
 
     private void cleanPreview() {
+        System.out.println("Cleaning preview - resetting all markers");
+
         // Alle Haupt-Layer Marker-Bilder zurücksetzen
         for (ImageView marker : trackingPointList1) {
             marker.setImageResource(0);
@@ -421,12 +508,17 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         for (ImageView marker : trackingPointList3) {
             marker.setImageResource(0);
         }
+
+        // Eckmarker explizit zurücksetzen
         for (ImageView marker : trackingPointListE) {
             marker.setImageResource(0);
+            marker.clearColorFilter();
         }
 
         // Scroll-Marker zurücksetzen
         cleanScrollMarkers();
+
+        System.out.println("Preview cleaned");
     }
 
     private void cleanScrollMarkers() {
@@ -438,18 +530,74 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         if (parent == null) return;
 
         int parentId = parent.getId();
+
+        System.out.println("Spinner changed - ID: " + parentId + ", Position: " + position + ", Item: " + parent.getItemAtPosition(position));
+
         if (parentId == R.id.spinner_edge_marker) {
-            trackingValues.setEdgeMarker(parent.getItemAtPosition(position).toString());
+            // Eckmarker basierend auf Position setzen (sprachunabhängig)
+            TrackingValues.EdgeMarkerType selectedEdge;
+            switch (position) {
+                case 0:
+                    selectedEdge = TrackingValues.EdgeMarkerType.NONE;
+                    break;
+                case 1:
+                    selectedEdge = TrackingValues.EdgeMarkerType.CORNER;
+                    break;
+                case 2:
+                default:
+                    selectedEdge = TrackingValues.EdgeMarkerType.SEMICIRCLE;
+                    break;
+            }
+            trackingValues.setEdgeMarker(selectedEdge);
+            System.out.println("Edge marker set to: " + selectedEdge + " (position: " + position + ")");
         } else if (parentId == R.id.spinner_scroll_marker) {
-            trackingValues.setScrollMarker(parent.getItemAtPosition(position).toString());
+            // Scroll-Marker basierend auf Position setzen (sprachunabhängig)
+            TrackingValues.ScrollMarkerType selectedScroll;
+            switch (position) {
+                case 0:
+                    selectedScroll = TrackingValues.ScrollMarkerType.NONE;
+                    break;
+                case 1:
+                    selectedScroll = TrackingValues.ScrollMarkerType.VERTICAL;
+                    break;
+                case 2:
+                default:
+                    selectedScroll = TrackingValues.ScrollMarkerType.HORIZONTAL;
+                    break;
+            }
+            trackingValues.setScrollMarker(selectedScroll);
+            System.out.println("Scroll marker set to: " + selectedScroll + " (position: " + position + ")");
         } else if (parentId == R.id.spinner_marker_density) {
-            trackingValues.setMarkerDensity(parent.getItemAtPosition(position).toString());
+            String selectedDensity = parent.getItemAtPosition(position).toString();
+            trackingValues.setMarkerDensity(selectedDensity);
+            System.out.println("Marker density set to: " + selectedDensity);
         } else if (parentId == R.id.spinner_marker_size) {
-            trackingValues.setMarkerSize(parent.getItemAtPosition(position).toString());
+            String selectedSize = parent.getItemAtPosition(position).toString();
+            trackingValues.setMarkerSize(selectedSize);
+            System.out.println("Marker size set to: " + selectedSize);
         } else if (parentId == R.id.spinner_marker_type) {
-            trackingValues.setMarkerType(parent.getItemAtPosition(position).toString());
+            // Marker-Typ basierend auf Position setzen (sprachunabhängig)
+            TrackingValues.MarkerType selectedType;
+            switch (position) {
+                case 0:
+                    selectedType = TrackingValues.MarkerType.PIE;
+                    break;
+                case 1:
+                    selectedType = TrackingValues.MarkerType.CIRCLE;
+                    break;
+                case 2:
+                    selectedType = TrackingValues.MarkerType.TRIANGLE;
+                    break;
+                case 3:
+                default:
+                    selectedType = TrackingValues.MarkerType.CROSS;
+                    break;
+            }
+            trackingValues.setMarkerType(selectedType);
+            System.out.println("Marker type set to: " + selectedType + " (position: " + position + ")");
         }
 
+        // Vorschau immer aktualisieren
         createPreview();
     }
 
