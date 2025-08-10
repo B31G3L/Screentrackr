@@ -26,8 +26,15 @@
     <!-- Settings Saved -->
     <string name="settings_saved">Einstellungen gespeichert</string>
 
-    <!-- Footer -->
-    <string name="footerLink">© 2025 <a href="https://play.google.com/store/apps/developer?id=Beigel">Beigel</a>\nin Zusammenarbeit mit <a href="https://www.overmind-studios.de/">Overmind Studios</a>\nauch verfügbar im <a href="https://www.overmind-studios.de/screentrackr">Browser</a></string>
+    <!-- Schöner Footer Strings -->
+    <string name="footer_beigel">Beigel</string>
+    <string name="footer_overmind">Overmind Studios</string>
+    <string name="footer_collaboration_text">in Zusammenarbeit mit</string>
+    <string name="footer_browser_text">auch verfügbar im</string>
+    <string name="footer_browser_link">Browser</string>
+
+    <!-- Browser Error Message -->
+    <string name="browser_not_available">Browser nicht verfügbar</string>
 
     <!-- Marker Types -->
     <string-array name="marker_type_array">

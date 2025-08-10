@@ -2,8 +2,8 @@ package com.beigel.screenTracker;
 
 import android.content.Intent;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
-import android.text.method.LinkMovementMethod;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -25,13 +25,13 @@ import java.util.ArrayList;
 /**
  * Hauptaktivität der App mit Einstellungsoptionen und Vorschau
  * Angepasst für separaten Scroll-Marker Layer und Mehrsprachigkeit
+ * Mit verbessertem Footer-Design und klickbaren Links
  */
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
     private Button buttonBackgroundColor;
     private Button buttonMarkerColor;
     private Button buttonStart;
-    private TextView footerText;
     private ConstraintLayout previewTrackingBackground;
     private ConstraintLayout previewScrollMarkerLayer;
 
@@ -40,6 +40,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private Spinner spinnerMarkerType;
     private Spinner spinnerEdgeMarkers;
     private Spinner spinnerScrollMarkers;
+
+    // Footer-Links
+    private TextView footerBeigelLink;
+    private TextView footerOvermindLink;
+    private TextView footerBrowserLink;
 
     private ArrayList<ImageView> trackingPointList1;
     private ArrayList<ImageView> trackingPointList2;
@@ -61,7 +66,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         initializeMarkerLists();
         setupSpinners();
         setupButtons();
-        setupActivityLink();
+        initializeFooterLinks();
 
         // Vorschau aktualisieren
         updateColorButtons();
@@ -75,7 +80,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         buttonStart = findViewById(R.id.button_start);
         buttonBackgroundColor = findViewById(R.id.buttonBackgroundColor);
         buttonMarkerColor = findViewById(R.id.buttonMarkerColor);
-        footerText = findViewById(R.id.footer);
 
         previewTrackingBackground = findViewById(R.id.trackingBackground);
         previewScrollMarkerLayer = findViewById(R.id.scrollMarkerLayer);
@@ -85,6 +89,50 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         spinnerMarkerType = findViewById(R.id.spinner_marker_type);
         spinnerEdgeMarkers = findViewById(R.id.spinner_edge_marker);
         spinnerScrollMarkers = findViewById(R.id.spinner_scroll_marker);
+    }
+
+    /**
+     * Initialisiert die Footer-Links mit Click-Handlers
+     */
+    private void initializeFooterLinks() {
+        footerBeigelLink = findViewById(R.id.footer_beigel_link);
+        footerOvermindLink = findViewById(R.id.footer_overmind_link);
+        footerBrowserLink = findViewById(R.id.footer_browser_link);
+
+        // Beigel Website Link
+        footerBeigelLink.setOnClickListener(v -> {
+            openWebLink("https://play.google.com/store/apps/developer?id=Beigel");
+        });
+
+        // Overmind Studios Link
+        footerOvermindLink.setOnClickListener(v -> {
+            openWebLink("https://www.overmind-studios.de/");
+        });
+
+        // Browser Version Link
+        footerBrowserLink.setOnClickListener(v -> {
+            openWebLink("https://www.overmind-studios.de/screentrackr");
+        });
+    }
+
+    /**
+     * Öffnet einen Web-Link im Browser
+     */
+    private void openWebLink(String url) {
+        try {
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            startActivity(browserIntent);
+        } catch (Exception e) {
+            // Fallback falls kein Browser verfügbar ist
+            String message = "Browser nicht verfügbar";
+            try {
+                message = getString(R.string.browser_not_available);
+            } catch (Exception ex) {
+                // Fallback String verwenden
+            }
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+            System.out.println("Error opening browser: " + e.getMessage());
+        }
     }
 
     /**
@@ -218,10 +266,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         // Farb-Buttons mit lokalisierten Dialogen
         buttonBackgroundColor.setOnClickListener(this::showBackgroundColorDialog);
         buttonMarkerColor.setOnClickListener(this::showMarkerColorDialog);
-    }
-
-    private void setupActivityLink() {
-        footerText.setMovementMethod(LinkMovementMethod.getInstance());
     }
 
     /**
@@ -468,37 +512,29 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 System.out.println("Returning CIRCLE drawable");
                 return R.drawable.ic_marker_circle;
             case TRIANGLE:
-                System.out.println("Returning TRIANGLE drawable");
                 return R.drawable.ic_marker_triangle;
             case CROSS:
             default:
-                System.out.println("Returning CROSS drawable (default)");
                 return R.drawable.ic_marker_cross;
         }
     }
 
     private int getEdgeMarkerDrawableResource() {
         TrackingValues.EdgeMarkerType currentType = trackingValues.getEdgeMarker();
-        System.out.println("Getting drawable for edge marker type: " + currentType);
 
         switch (currentType) {
             case CORNER:
-                System.out.println("Returning CORNER edge drawable");
                 return R.drawable.ic_marker_cross_edge;
             case SEMICIRCLE:
-                System.out.println("Returning SEMICIRCLE edge drawable");
                 return R.drawable.ic_marker_circle_edge;
             case NONE:
             default:
-                System.out.println("No edge marker (NONE)");
                 return 0;
         }
     }
 
     private void cleanPreview() {
-        System.out.println("Cleaning preview - resetting all markers");
 
-        // Alle Haupt-Layer Marker-Bilder zurücksetzen
         for (ImageView marker : trackingPointList1) {
             marker.setImageResource(0);
         }
@@ -509,16 +545,13 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             marker.setImageResource(0);
         }
 
-        // Eckmarker explizit zurücksetzen
         for (ImageView marker : trackingPointListE) {
             marker.setImageResource(0);
             marker.clearColorFilter();
         }
 
-        // Scroll-Marker zurücksetzen
         cleanScrollMarkers();
 
-        System.out.println("Preview cleaned");
     }
 
     private void cleanScrollMarkers() {
@@ -531,10 +564,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         int parentId = parent.getId();
 
-        System.out.println("Spinner changed - ID: " + parentId + ", Position: " + position + ", Item: " + parent.getItemAtPosition(position));
-
         if (parentId == R.id.spinner_edge_marker) {
-            // Eckmarker basierend auf Position setzen (sprachunabhängig)
             TrackingValues.EdgeMarkerType selectedEdge;
             switch (position) {
                 case 0:
@@ -549,9 +579,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                     break;
             }
             trackingValues.setEdgeMarker(selectedEdge);
-            System.out.println("Edge marker set to: " + selectedEdge + " (position: " + position + ")");
         } else if (parentId == R.id.spinner_scroll_marker) {
-            // Scroll-Marker basierend auf Position setzen (sprachunabhängig)
             TrackingValues.ScrollMarkerType selectedScroll;
             switch (position) {
                 case 0:
@@ -566,17 +594,13 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                     break;
             }
             trackingValues.setScrollMarker(selectedScroll);
-            System.out.println("Scroll marker set to: " + selectedScroll + " (position: " + position + ")");
         } else if (parentId == R.id.spinner_marker_density) {
             String selectedDensity = parent.getItemAtPosition(position).toString();
             trackingValues.setMarkerDensity(selectedDensity);
-            System.out.println("Marker density set to: " + selectedDensity);
         } else if (parentId == R.id.spinner_marker_size) {
             String selectedSize = parent.getItemAtPosition(position).toString();
             trackingValues.setMarkerSize(selectedSize);
-            System.out.println("Marker size set to: " + selectedSize);
         } else if (parentId == R.id.spinner_marker_type) {
-            // Marker-Typ basierend auf Position setzen (sprachunabhängig)
             TrackingValues.MarkerType selectedType;
             switch (position) {
                 case 0:
@@ -594,10 +618,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                     break;
             }
             trackingValues.setMarkerType(selectedType);
-            System.out.println("Marker type set to: " + selectedType + " (position: " + position + ")");
         }
-
-        // Vorschau immer aktualisieren
         createPreview();
     }
 
