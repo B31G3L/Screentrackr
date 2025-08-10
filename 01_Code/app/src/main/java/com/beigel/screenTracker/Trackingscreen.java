@@ -1,10 +1,12 @@
 package com.beigel.screenTracker;
 
+import android.animation.ValueAnimator;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
@@ -22,7 +24,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 /**
- * Vollbildschirm-Tracking-Ansicht mit verbessertem unendlichem Scrolling
+ * Vollbildschirm-Tracking-Ansicht mit verbessertem unendlichem Scrolling und Momentum-Scrolling
  */
 public class Trackingscreen extends AppCompatActivity implements GestureDetector.OnGestureListener {
 
@@ -45,6 +47,15 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
     private float totalScrollY = 0f;
     private int screenWidth;
     private int screenHeight;
+
+    // Momentum-Scrolling Variablen
+    private ValueAnimator momentumAnimator;
+    private boolean isMomentumScrolling = false;
+
+    // Momentum-Scrolling Konstanten
+    private static final float MOMENTUM_FRICTION = 0.85f; // Reibungsfaktor
+    private static final int MOMENTUM_DURATION = 2000; // Maximale Dauer in ms
+    private static final float MIN_VELOCITY = 50f; // Mindestgeschwindigkeit für Momentum
 
     // Separate Basis-Positionen für verschiedene Scroll-Modi
     // Für vertikales Scrollen: Links und Rechts bei 33% und 66%
@@ -553,6 +564,94 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
         }
     }
 
+    /**
+     * Startet das Momentum-Scrolling mit der angegebenen Anfangsgeschwindigkeit
+     */
+    private void startMomentumScroll(float initialVelocity, boolean isVertical) {
+        // Vorherigen Animator stoppen falls aktiv
+        if (momentumAnimator != null && momentumAnimator.isRunning()) {
+            momentumAnimator.cancel();
+        }
+
+        isMomentumScrolling = true;
+
+        // Berechne Gesamt-Scroll-Distanz basierend auf Anfangsgeschwindigkeit
+        // Formel: distance = velocity² / (2 * deceleration)
+        float deceleration = 2000f; // Pixel pro Sekunde²
+        float totalDistance = (initialVelocity * initialVelocity) / (2 * deceleration);
+
+        // Vorzeichen beibehalten
+        if (initialVelocity < 0) {
+            totalDistance = -totalDistance;
+        }
+
+        // Animator erstellen
+        momentumAnimator = ValueAnimator.ofFloat(0f, totalDistance);
+        momentumAnimator.setDuration(MOMENTUM_DURATION);
+        momentumAnimator.setInterpolator(new DecelerateInterpolator(2.0f)); // Starke Verlangsamung
+
+        // Startpositionen merken
+        final float startScrollX = totalScrollX;
+        final float startScrollY = totalScrollY;
+
+        momentumAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            private float lastAnimatedValue = 0f;
+
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                if (!isMomentumScrolling) {
+                    animation.cancel();
+                    return;
+                }
+
+                float currentAnimatedValue = (Float) animation.getAnimatedValue();
+                float deltaValue = currentAnimatedValue - lastAnimatedValue;
+                lastAnimatedValue = currentAnimatedValue;
+
+                // Scroll-Position basierend auf Animation aktualisieren
+                if (isVertical) {
+                    totalScrollY += deltaValue;
+                } else {
+                    totalScrollX += deltaValue;
+                }
+
+                // Debug-Info
+                System.out.println("Momentum Scroll - X: " + totalScrollX + ", Y: " + totalScrollY +
+                        ", Delta: " + deltaValue + ", Progress: " + animation.getAnimatedFraction());
+
+                // Marker aktualisieren
+                updateDynamicMarkers();
+            }
+        });
+
+        momentumAnimator.addListener(new android.animation.Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(android.animation.Animator animation) {
+                System.out.println("Momentum scrolling started");
+            }
+
+            @Override
+            public void onAnimationEnd(android.animation.Animator animation) {
+                isMomentumScrolling = false;
+                System.out.println("Momentum scrolling ended");
+            }
+
+            @Override
+            public void onAnimationCancel(android.animation.Animator animation) {
+                isMomentumScrolling = false;
+                System.out.println("Momentum scrolling cancelled");
+            }
+
+            @Override
+            public void onAnimationRepeat(android.animation.Animator animation) {
+                // Nicht verwendet
+            }
+        });
+
+        // Animation starten
+        momentumAnimator.start();
+    }
+
     // GestureDetector.OnGestureListener Implementierung
 
     @Override
@@ -580,6 +679,12 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
             return false;
         }
 
+        // Momentum-Scrolling stoppen wenn Benutzer manuell scrollt
+        if (isMomentumScrolling && momentumAnimator != null) {
+            momentumAnimator.cancel();
+            isMomentumScrolling = false;
+        }
+
         // Scroll-Position direkt aktualisieren (normale Richtung)
         switch (scrollType) {
             case VERTICAL:
@@ -591,7 +696,7 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
         }
 
         // Debug: Scroll-Position und Marker-Anzahl ausgeben
-        System.out.println("Scroll - X: " + totalScrollX + ", Y: " + totalScrollY +
+        System.out.println("Manual Scroll - X: " + totalScrollX + ", Y: " + totalScrollY +
                 ", dX: " + distanceX + ", dY: " + distanceY +
                 ", Markers: " + dynamicScrollMarkers.size());
 
@@ -608,8 +713,39 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
 
     @Override
     public boolean onFling(@NonNull MotionEvent e1, @NonNull MotionEvent e2, float velocityX, float velocityY) {
-        // Momentum-Scrolling entfernt - keine Aktion erforderlich
-        return false;
+        TrackingValues.ScrollMarkerType scrollType = trackingValues.getScrollMarker();
+
+        if (scrollType == TrackingValues.ScrollMarkerType.NONE) {
+            return false;
+        }
+
+        // Bestimme relevante Geschwindigkeit basierend auf Scroll-Typ
+        float relevantVelocity = 0f;
+        boolean isVerticalFling = false;
+
+        switch (scrollType) {
+            case VERTICAL:
+                relevantVelocity = -velocityY; // Negativ für natürliche Richtung
+                isVerticalFling = true;
+                break;
+            case HORIZONTAL:
+                relevantVelocity = -velocityX; // Negativ für natürliche Richtung
+                isVerticalFling = false;
+                break;
+        }
+
+        // Prüfe ob Geschwindigkeit hoch genug für Momentum ist
+        if (Math.abs(relevantVelocity) < MIN_VELOCITY) {
+            return false;
+        }
+
+        // Starte Momentum-Scrolling
+        startMomentumScroll(relevantVelocity, isVerticalFling);
+
+        System.out.println("Fling started - Velocity: " + relevantVelocity +
+                ", Type: " + (isVerticalFling ? "Vertical" : "Horizontal"));
+
+        return true;
     }
 
     @Override
@@ -620,11 +756,23 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
     @Override
     protected void onPause() {
         super.onPause();
+
+        // Momentum-Scrolling pausieren
+        if (momentumAnimator != null && momentumAnimator.isRunning()) {
+            momentumAnimator.cancel();
+            isMomentumScrolling = false;
+        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
+        // Momentum-Animator aufräumen
+        if (momentumAnimator != null && momentumAnimator.isRunning()) {
+            momentumAnimator.cancel();
+        }
+
         clearDynamicMarkers();
         binding = null;
     }

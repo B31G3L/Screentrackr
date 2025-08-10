@@ -27,7 +27,7 @@
     <string name="settings_saved">Settings saved</string>
 
     <!-- Footer -->
-    <string name="footerLink">© 2025 <a href="https://b31g3l.github.io/">Beigel</a>\nin cooperation with <a href="https://www.overmind-studios.de/">Overmind Studios</a>\nalso available in the <a href="https://www.overmind-studios.de/screentrackr">browser</a></string>
+    <string name="footerLink">© 2025 <a href="https://play.google.com/store/apps/developer?id=Beigel">Beigel</a>\nin cooperation with <a href="https://www.overmind-studios.de/">Overmind Studios</a>\nalso available in the <a href="https://www.overmind-studios.de/screentrackr">browser</a></string>
 
     <!-- Marker Types -->
     <string-array name="marker_type_array">
