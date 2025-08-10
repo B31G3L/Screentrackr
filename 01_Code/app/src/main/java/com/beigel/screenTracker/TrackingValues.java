@@ -1,12 +1,19 @@
 package com.beigel.screenTracker;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import java.io.Serializable;
 
 /**
- * Erweiterte TrackingValues-Klasse mit Scroll-Markern
+ * Verbesserte TrackingValues-Klasse mit erweiterten Funktionen
+ * - AppConstants Integration
+ * - Bessere Validierung
+ * - toString für Debugging
+ * - Immutable Enums
  */
 public class TrackingValues implements Serializable {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L; // Kompatibel mit Original
 
     /**
      * Verfügbare Marker-Typen
@@ -27,7 +34,9 @@ public class TrackingValues implements Serializable {
             return displayName;
         }
 
-        public static MarkerType fromString(String text) {
+        public static MarkerType fromString(@Nullable String text) {
+            if (text == null) return CROSS;
+
             for (MarkerType type : MarkerType.values()) {
                 if (type.displayName.equalsIgnoreCase(text)) {
                     return type;
@@ -60,7 +69,9 @@ public class TrackingValues implements Serializable {
             return displayName;
         }
 
-        public static EdgeMarkerType fromString(String text) {
+        public static EdgeMarkerType fromString(@Nullable String text) {
+            if (text == null) return NONE;
+
             for (EdgeMarkerType type : EdgeMarkerType.values()) {
                 if (type.displayName.equalsIgnoreCase(text)) {
                     return type;
@@ -93,7 +104,9 @@ public class TrackingValues implements Serializable {
             return displayName;
         }
 
-        public static ScrollMarkerType fromString(String text) {
+        public static ScrollMarkerType fromString(@Nullable String text) {
+            if (text == null) return NONE;
+
             for (ScrollMarkerType type : ScrollMarkerType.values()) {
                 if (type.displayName.equalsIgnoreCase(text)) {
                     return type;
@@ -108,28 +121,48 @@ public class TrackingValues implements Serializable {
         }
     }
 
-    // Standardwerte
-    private String backgroundColor = "#000000";
-    private String markerColor = "#FFFFFF";
+    // Felder mit AppConstants als Standardwerte
+    private String backgroundColor = AppConstants.DEFAULT_BACKGROUND_COLOR;
+    private String markerColor = AppConstants.DEFAULT_MARKER_COLOR;
     private int markerDensity = 1;
     private int markerSize = 1;
     private MarkerType markerType = MarkerType.CROSS;
     private EdgeMarkerType edgeMarker = EdgeMarkerType.NONE;
     private ScrollMarkerType scrollMarker = ScrollMarkerType.NONE;
 
-    // Konstruktoren
+    // ========== CONSTRUCTORS ==========
+
+    /**
+     * Standard-Konstruktor mit Default-Werten
+     */
     public TrackingValues() {
         // Standardwerte werden in den Feldern gesetzt
     }
 
-    // Getter und Setter mit Validierung
+    /**
+     * Copy-Konstruktor
+     */
+    public TrackingValues(@NonNull TrackingValues other) {
+        this.backgroundColor = other.backgroundColor;
+        this.markerColor = other.markerColor;
+        this.markerDensity = other.markerDensity;
+        this.markerSize = other.markerSize;
+        this.markerType = other.markerType;
+        this.edgeMarker = other.edgeMarker;
+        this.scrollMarker = other.scrollMarker;
+    }
+
+    // ========== GETTERS AND SETTERS WITH VALIDATION ==========
+
     public String getBackgroundColor() {
         return backgroundColor;
     }
 
-    public void setBackgroundColor(String backgroundColor) {
+    public void setBackgroundColor(@Nullable String backgroundColor) {
         if (isValidHexColor(backgroundColor)) {
             this.backgroundColor = backgroundColor;
+        } else {
+            this.backgroundColor = AppConstants.DEFAULT_BACKGROUND_COLOR;
         }
     }
 
@@ -137,9 +170,11 @@ public class TrackingValues implements Serializable {
         return markerColor;
     }
 
-    public void setMarkerColor(String markerColor) {
+    public void setMarkerColor(@Nullable String markerColor) {
         if (isValidHexColor(markerColor)) {
             this.markerColor = markerColor;
+        } else {
+            this.markerColor = AppConstants.DEFAULT_MARKER_COLOR;
         }
     }
 
@@ -148,13 +183,14 @@ public class TrackingValues implements Serializable {
     }
 
     public void setMarkerDensity(int markerDensity) {
-        if (markerDensity >= 0 && markerDensity <= 3) {
+        if (markerDensity >= AppConstants.Validation.MIN_MARKER_DENSITY &&
+                markerDensity <= AppConstants.Validation.MAX_MARKER_DENSITY) {
             this.markerDensity = markerDensity;
         }
     }
 
     // Überladene Methode für String-Eingabe
-    public void setMarkerDensity(String markerDensity) {
+    public void setMarkerDensity(@Nullable String markerDensity) {
         try {
             setMarkerDensity(Integer.parseInt(markerDensity));
         } catch (NumberFormatException e) {
@@ -167,13 +203,14 @@ public class TrackingValues implements Serializable {
     }
 
     public void setMarkerSize(int markerSize) {
-        if (markerSize >= 1 && markerSize <= 5) {
+        if (markerSize >= AppConstants.Validation.MIN_MARKER_SIZE &&
+                markerSize <= AppConstants.Validation.MAX_MARKER_SIZE) {
             this.markerSize = markerSize;
         }
     }
 
     // Überladene Methode für String-Eingabe
-    public void setMarkerSize(String markerSize) {
+    public void setMarkerSize(@Nullable String markerSize) {
         try {
             setMarkerSize(Integer.parseInt(markerSize));
         } catch (NumberFormatException e) {
@@ -185,14 +222,12 @@ public class TrackingValues implements Serializable {
         return markerType;
     }
 
-    public void setMarkerType(MarkerType markerType) {
-        if (markerType != null) {
-            this.markerType = markerType;
-        }
+    public void setMarkerType(@Nullable MarkerType markerType) {
+        this.markerType = markerType != null ? markerType : MarkerType.CROSS;
     }
 
     // Überladene Methode für String-Eingabe
-    public void setMarkerType(String markerType) {
+    public void setMarkerType(@Nullable String markerType) {
         this.markerType = MarkerType.fromString(markerType);
     }
 
@@ -200,14 +235,12 @@ public class TrackingValues implements Serializable {
         return edgeMarker;
     }
 
-    public void setEdgeMarker(EdgeMarkerType edgeMarker) {
-        if (edgeMarker != null) {
-            this.edgeMarker = edgeMarker;
-        }
+    public void setEdgeMarker(@Nullable EdgeMarkerType edgeMarker) {
+        this.edgeMarker = edgeMarker != null ? edgeMarker : EdgeMarkerType.NONE;
     }
 
     // Überladene Methode für String-Eingabe
-    public void setEdgeMarker(String edgeMarker) {
+    public void setEdgeMarker(@Nullable String edgeMarker) {
         this.edgeMarker = EdgeMarkerType.fromString(edgeMarker);
     }
 
@@ -215,40 +248,137 @@ public class TrackingValues implements Serializable {
         return scrollMarker;
     }
 
-    public void setScrollMarker(ScrollMarkerType scrollMarker) {
-        if (scrollMarker != null) {
-            this.scrollMarker = scrollMarker;
-        }
+    public void setScrollMarker(@Nullable ScrollMarkerType scrollMarker) {
+        this.scrollMarker = scrollMarker != null ? scrollMarker : ScrollMarkerType.NONE;
     }
 
     // Überladene Methode für String-Eingabe
-    public void setScrollMarker(String scrollMarker) {
+    public void setScrollMarker(@Nullable String scrollMarker) {
         this.scrollMarker = ScrollMarkerType.fromString(scrollMarker);
     }
 
-    // Legacy-Methoden für Kompatibilität
+    // ========== LEGACY METHODS FOR COMPATIBILITY ==========
+
+    /**
+     * @deprecated Verwende {@link #getMarkerDensity()} direkt
+     */
+    @Deprecated
     public String getMarkerDensityAsString() {
         return String.valueOf(markerDensity);
     }
 
+    /**
+     * @deprecated Verwende {@link #getMarkerSize()} direkt
+     */
+    @Deprecated
     public String getMarkerSizeAsString() {
         return String.valueOf(markerSize);
     }
 
+    /**
+     * @deprecated Verwende {@link #getMarkerType()} direkt
+     */
+    @Deprecated
     public String getMarkerTypeAsString() {
         return markerType.toString();
     }
 
+    /**
+     * @deprecated Verwende {@link #getEdgeMarker()} direkt
+     */
+    @Deprecated
     public String getEdgeMarkerAsString() {
         return edgeMarker.toString();
     }
 
+    /**
+     * @deprecated Verwende {@link #getScrollMarker()} direkt
+     */
+    @Deprecated
     public String getScrollMarkerAsString() {
         return scrollMarker.toString();
     }
 
-    // Hilfsmethode zur Validierung von Hex-Farbcodes
-    private boolean isValidHexColor(String colorCode) {
-        return colorCode != null && colorCode.matches("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{8})$");
+    // ========== VALIDATION METHODS ==========
+
+    /**
+     * Validiert Hex-Farbcode mit AppConstants
+     */
+    private boolean isValidHexColor(@Nullable String colorCode) {
+        if (colorCode == null) return false;
+        return colorCode.matches(AppConstants.Validation.HEX_COLOR_PATTERN);
+    }
+
+    /**
+     * Prüft ob alle Einstellungen gültig sind
+     */
+    public boolean isValid() {
+        return isValidHexColor(backgroundColor) &&
+                isValidHexColor(markerColor) &&
+                markerDensity >= AppConstants.Validation.MIN_MARKER_DENSITY &&
+                markerDensity <= AppConstants.Validation.MAX_MARKER_DENSITY &&
+                markerSize >= AppConstants.Validation.MIN_MARKER_SIZE &&
+                markerSize <= AppConstants.Validation.MAX_MARKER_SIZE &&
+                markerType != null &&
+                edgeMarker != null &&
+                scrollMarker != null;
+    }
+
+    /**
+     * Setzt alle Werte auf gültige Standardwerte zurück
+     */
+    public void resetToDefaults() {
+        backgroundColor = AppConstants.DEFAULT_BACKGROUND_COLOR;
+        markerColor = AppConstants.DEFAULT_MARKER_COLOR;
+        markerDensity = 1;
+        markerSize = 1;
+        markerType = MarkerType.CROSS;
+        edgeMarker = EdgeMarkerType.NONE;
+        scrollMarker = ScrollMarkerType.NONE;
+    }
+
+    // ========== OBJECT METHODS ==========
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        TrackingValues that = (TrackingValues) o;
+
+        if (markerDensity != that.markerDensity) return false;
+        if (markerSize != that.markerSize) return false;
+        if (!backgroundColor.equals(that.backgroundColor)) return false;
+        if (!markerColor.equals(that.markerColor)) return false;
+        if (markerType != that.markerType) return false;
+        if (edgeMarker != that.edgeMarker) return false;
+        return scrollMarker == that.scrollMarker;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = backgroundColor.hashCode();
+        result = 31 * result + markerColor.hashCode();
+        result = 31 * result + markerDensity;
+        result = 31 * result + markerSize;
+        result = 31 * result + markerType.hashCode();
+        result = 31 * result + edgeMarker.hashCode();
+        result = 31 * result + scrollMarker.hashCode();
+        return result;
+    }
+
+    @Override
+    @NonNull
+    public String toString() {
+        return "TrackingValues{" +
+                "backgroundColor='" + backgroundColor + '\'' +
+                ", markerColor='" + markerColor + '\'' +
+                ", markerDensity=" + markerDensity +
+                ", markerSize=" + markerSize +
+                ", markerType=" + markerType +
+                ", edgeMarker=" + edgeMarker +
+                ", scrollMarker=" + scrollMarker +
+                ", isValid=" + isValid() +
+                '}';
     }
 }

@@ -3,206 +3,325 @@ package com.beigel.screenTracker;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.util.Log;
 import android.widget.ImageView;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
 
 /**
- * Statische Utility-Klasse mit erweiterten Methoden für Scroll-Marker
+ * Aufgeräumte und erweiterte Utilities-Klasse
+ * - Besseres Error Handling
+ * - Verwendung von AppConstants
+ * - Defensive Programmierung
+ * - Proper Logging
  */
-public class Utilities {
+public final class Utilities {
 
-    private static final String PREFS_NAME = "ScreentrackrPrefs";
+    private static final String TAG = AppConstants.LogTags.MAIN;
 
     // Privater Konstruktor verhindert Instanziierung
-    Utilities() {
+    private Utilities() {
         throw new UnsupportedOperationException("Utilities ist eine statische Hilfsklasse");
     }
 
+    // ========== MARKER CREATION ==========
+
     /**
-     * Erstellt Marker mit den angegebenen Einstellungen
+     * Erstellt Marker mit verbessertem Error Handling
      */
-    public static void createMarker(ArrayList<ImageView> trackingPointList, TrackingValues trackingValues) {
-        int markerType = getMarkerDrawable(trackingValues.getMarkerType());
-        int markerSize = getMarkerSize(trackingValues.getMarkerSize());
-        int markerColor = Color.parseColor(trackingValues.getMarkerColor());
+    public static void createMarker(@NonNull ArrayList<ImageView> trackingPointList,
+                                    @NonNull TrackingValues trackingValues) {
+        if (trackingPointList.isEmpty()) {
+            Log.w(TAG, "Leere Marker-Liste übergeben");
+            return;
+        }
 
-        for (ImageView marker : trackingPointList) {
-            marker.setImageResource(markerType);
+        try {
+            int markerType = getMarkerDrawable(trackingValues.getMarkerType());
+            int markerSize = getMarkerSizeInPixels(trackingValues.getMarkerSize());
+            int markerColor = parseColorSafely(trackingValues.getMarkerColor());
 
-            // Größe anpassen
-            marker.getLayoutParams().height = markerSize;
-            marker.getLayoutParams().width = markerSize;
+            for (ImageView marker : trackingPointList) {
+                if (marker != null) {
+                    applyMarkerProperties(marker, markerType, markerSize, markerColor);
+                } else {
+                    Log.w(TAG, "Null ImageView in Marker-Liste gefunden");
+                }
+            }
 
-            // Farbe anpassen
-            marker.setColorFilter(markerColor);
+            Log.d(TAG, String.format("Marker erstellt: Typ=%s, Größe=%d, Farbe=%s",
+                    trackingValues.getMarkerType(), markerSize, trackingValues.getMarkerColor()));
 
-            // Layout aktualisieren
+        } catch (Exception e) {
+            Log.e(TAG, "Fehler beim Erstellen der Marker", e);
+        }
+    }
+
+    /**
+     * Wendet Marker-Eigenschaften auf einen ImageView an
+     */
+    private static void applyMarkerProperties(@NonNull ImageView marker,
+                                              int drawableRes,
+                                              int size,
+                                              int color) {
+        marker.setImageResource(drawableRes);
+
+        // Größe sicher setzen
+        if (marker.getLayoutParams() != null) {
+            marker.getLayoutParams().height = size;
+            marker.getLayoutParams().width = size;
             marker.requestLayout();
         }
+
+        marker.setColorFilter(color);
     }
 
     /**
      * Bestimmt den Drawable-Ressourcen-ID basierend auf dem Marker-Typ
+     * Jetzt mit AppConstants
      */
-    private static int getMarkerDrawable(TrackingValues.MarkerType markerType) {
+    public static int getMarkerDrawable(@NonNull TrackingValues.MarkerType markerType) {
         switch (markerType) {
             case PIE:
-                return R.drawable.ic_marker_pie;
+                return AppConstants.MarkerDrawables.PIE;
             case CIRCLE:
-                return R.drawable.ic_marker_circle;
+                return AppConstants.MarkerDrawables.CIRCLE;
             case TRIANGLE:
-                return R.drawable.ic_marker_triangle;
+                return AppConstants.MarkerDrawables.TRIANGLE;
             case CROSS:
             default:
-                return R.drawable.ic_marker_cross;
+                return AppConstants.MarkerDrawables.CROSS;
         }
     }
 
     /**
-     * Ermittelt die Markergröße in Pixeln basierend auf der Größeneinstellung
+     * Verbesserte Markergröße-Berechnung mit Konstanten
      */
-    public static int getMarkerSize(int markerSize) {
+    public static int getMarkerSizeInPixels(int markerSize) {
         switch (markerSize) {
-            case 1:
-                return 40;
-            case 2:
-                return 50;
-            case 3:
-                return 60;
-            case 4:
-                return 70;
-            case 5:
-                return 80;
+            case 1: return AppConstants.MarkerSizes.SIZE_1;
+            case 2: return AppConstants.MarkerSizes.SIZE_2;
+            case 3: return AppConstants.MarkerSizes.SIZE_3;
+            case 4: return AppConstants.MarkerSizes.SIZE_4;
+            case 5: return AppConstants.MarkerSizes.SIZE_5;
             default:
-                return 40;
+                Log.w(TAG, "Ungültige Markergröße: " + markerSize + ", verwende Standard");
+                return AppConstants.MarkerSizes.DEFAULT_SIZE;
         }
     }
 
     /**
-     * Erstellt Edge-Marker mit den angegebenen Einstellungen
+     * Legacy-Methode für Kompatibilität
+     * @deprecated Verwende {@link #getMarkerSizeInPixels(int)} stattdessen
      */
-    public static void createEdgeMarker(ArrayList<ImageView> trackingPointListE, TrackingValues trackingValues) {
-        // Wenn keine Eckmarker gewünscht sind, frühzeitig beenden
-        if (trackingValues.getEdgeMarker() == TrackingValues.EdgeMarkerType.NONE) {
+    @Deprecated
+    public static int getMarkerSize(int markerSize) {
+        return getMarkerSizeInPixels(markerSize);
+    }
+
+    // ========== EDGE MARKERS ==========
+
+    /**
+     * Erstellt Edge-Marker mit verbessertem Error Handling
+     */
+    public static void createEdgeMarker(@NonNull ArrayList<ImageView> trackingPointListE,
+                                        @NonNull TrackingValues trackingValues) {
+        TrackingValues.EdgeMarkerType edgeType = trackingValues.getEdgeMarker();
+
+        if (edgeType == TrackingValues.EdgeMarkerType.NONE) {
+            clearMarkers(trackingPointListE);
             return;
         }
 
-        int edgeMarker = getEdgeMarkerDrawable(trackingValues.getEdgeMarker());
-        int markerColor = Color.parseColor(trackingValues.getMarkerColor());
+        try {
+            int edgeMarkerRes = getEdgeMarkerDrawable(edgeType);
+            int markerColor = parseColorSafely(trackingValues.getMarkerColor());
 
-        for (ImageView marker : trackingPointListE) {
-            marker.setImageResource(edgeMarker);
-            marker.setColorFilter(markerColor);
+            for (ImageView marker : trackingPointListE) {
+                if (marker != null) {
+                    marker.setImageResource(edgeMarkerRes);
+                    marker.setColorFilter(markerColor);
+                } else {
+                    Log.w(TAG, "Null ImageView in Edge-Marker-Liste");
+                }
+            }
+
+            Log.d(TAG, "Edge-Marker erstellt: " + edgeType);
+
+        } catch (Exception e) {
+            Log.e(TAG, "Fehler beim Erstellen der Edge-Marker", e);
         }
     }
 
     /**
-     * Erstellt Scroll-Marker mit den angegebenen Einstellungen
-     * Verwendet dieselben Marker-Typen wie die normalen Marker
+     * Bestimmt Edge-Marker Drawable mit AppConstants
      */
-    public static void createScrollMarker(ArrayList<ImageView> trackingPointListSV,
-                                          ArrayList<ImageView> trackingPointListSH,
-                                          TrackingValues trackingValues) {
-        // Alle Scroll-Marker zurücksetzen
-        resetScrollMarkers(trackingPointListSV, trackingPointListSH);
-
-        TrackingValues.ScrollMarkerType scrollType = trackingValues.getScrollMarker();
-
-        switch (scrollType) {
-            case VERTICAL:
-                createMarker(trackingPointListSV, trackingValues);
-                break;
-            case HORIZONTAL:
-                createMarker(trackingPointListSH, trackingValues);
-                break;
-            case NONE:
-            default:
-                // Keine Scroll-Marker anzeigen
-                break;
-        }
-    }
-
-    /**
-     * Setzt alle Scroll-Marker zurück
-     */
-    private static void resetScrollMarkers(ArrayList<ImageView> trackingPointListSV,
-                                           ArrayList<ImageView> trackingPointListSH) {
-        for (ImageView marker : trackingPointListSV) {
-            marker.setImageResource(0);
-        }
-        for (ImageView marker : trackingPointListSH) {
-            marker.setImageResource(0);
-        }
-    }
-
-    /**
-     * Bestimmt den Drawable-Ressourcen-ID basierend auf dem Edge-Marker-Typ
-     */
-    private static int getEdgeMarkerDrawable(TrackingValues.EdgeMarkerType edgeMarkerType) {
+    private static int getEdgeMarkerDrawable(@NonNull TrackingValues.EdgeMarkerType edgeMarkerType) {
         switch (edgeMarkerType) {
             case CORNER:
-                return R.drawable.ic_marker_cross_edge;
+                return AppConstants.MarkerDrawables.EDGE_CORNER;
             case SEMICIRCLE:
-                return R.drawable.ic_marker_circle_edge;
+                return AppConstants.MarkerDrawables.EDGE_SEMICIRCLE;
+            case NONE:
             default:
-                return 0; // Sollte nicht erreicht werden
+                return 0;
+        }
+    }
+
+    // ========== COLOR UTILITIES ==========
+
+    /**
+     * Sichere Farb-Parsing mit Fallback
+     */
+    public static int parseColorSafely(@Nullable String colorString) {
+        if (colorString == null || colorString.trim().isEmpty()) {
+            Log.w(TAG, "Null/leerer Farb-String, verwende Standard");
+            return Color.parseColor(AppConstants.DEFAULT_MARKER_COLOR);
+        }
+
+        try {
+            return Color.parseColor(colorString);
+        } catch (IllegalArgumentException e) {
+            Log.w(TAG, "Ungültiger Farb-Code: " + colorString + ", verwende Standard", e);
+            return Color.parseColor(AppConstants.DEFAULT_MARKER_COLOR);
         }
     }
 
     /**
-     * Speichert die Tracking-Einstellungen
+     * Validiert Hex-Farbcode
      */
-    public static void saveSettings(Context context, TrackingValues trackingValues) {
-        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = prefs.edit();
+    public static boolean isValidHexColor(@Nullable String colorCode) {
+        if (colorCode == null) return false;
+        return colorCode.matches(AppConstants.Validation.HEX_COLOR_PATTERN);
+    }
 
-        editor.putString("backgroundColor", trackingValues.getBackgroundColor());
-        editor.putString("markerColor", trackingValues.getMarkerColor());
-        editor.putInt("markerDensity", trackingValues.getMarkerDensity());
-        editor.putInt("markerSize", trackingValues.getMarkerSize());
-        editor.putString("markerType", trackingValues.getMarkerType().name());
-        editor.putString("edgeMarker", trackingValues.getEdgeMarker().name());
-        editor.putString("scrollMarker", trackingValues.getScrollMarker().name());
+    // ========== SETTINGS PERSISTENCE ==========
 
-        editor.apply();
+    /**
+     * Verbesserte Settings-Speicherung mit AppConstants
+     */
+    public static void saveSettings(@NonNull Context context, @NonNull TrackingValues trackingValues) {
+        try {
+            SharedPreferences prefs = context.getSharedPreferences(AppConstants.Prefs.NAME, Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = prefs.edit();
+
+            editor.putString(AppConstants.Prefs.KEY_BACKGROUND_COLOR, trackingValues.getBackgroundColor());
+            editor.putString(AppConstants.Prefs.KEY_MARKER_COLOR, trackingValues.getMarkerColor());
+            editor.putInt(AppConstants.Prefs.KEY_MARKER_DENSITY, trackingValues.getMarkerDensity());
+            editor.putInt(AppConstants.Prefs.KEY_MARKER_SIZE, trackingValues.getMarkerSize());
+            editor.putString(AppConstants.Prefs.KEY_MARKER_TYPE, trackingValues.getMarkerType().name());
+            editor.putString(AppConstants.Prefs.KEY_EDGE_MARKER, trackingValues.getEdgeMarker().name());
+            editor.putString(AppConstants.Prefs.KEY_SCROLL_MARKER, trackingValues.getScrollMarker().name());
+
+            boolean success = editor.commit(); // Synchron für besseres Error Handling
+
+            if (success) {
+                Log.d(TAG, "Einstellungen erfolgreich gespeichert");
+            } else {
+                Log.e(TAG, "Fehler beim Speichern der Einstellungen");
+            }
+
+        } catch (Exception e) {
+            Log.e(TAG, "Exception beim Speichern der Einstellungen", e);
+        }
     }
 
     /**
-     * Lädt die Tracking-Einstellungen
+     * Verbesserte Settings-Ladung mit robustem Error Handling
      */
-    public static TrackingValues loadSettings(Context context) {
-        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+    @NonNull
+    public static TrackingValues loadSettings(@NonNull Context context) {
         TrackingValues trackingValues = new TrackingValues();
 
-        // Gespeicherte Werte oder Default-Werte verwenden
-        trackingValues.setBackgroundColor(prefs.getString("backgroundColor", "#000000"));
-        trackingValues.setMarkerColor(prefs.getString("markerColor", "#FFFFFF"));
-        trackingValues.setMarkerDensity(prefs.getInt("markerDensity", 1));
-        trackingValues.setMarkerSize(prefs.getInt("markerSize", 1));
-
-        // Enum-Werte wiederherstellen
         try {
-            String markerTypeString = prefs.getString("markerType", TrackingValues.MarkerType.CROSS.name());
-            trackingValues.setMarkerType(TrackingValues.MarkerType.valueOf(markerTypeString));
-        } catch (IllegalArgumentException e) {
-            trackingValues.setMarkerType(TrackingValues.MarkerType.CROSS);
-        }
+            SharedPreferences prefs = context.getSharedPreferences(AppConstants.Prefs.NAME, Context.MODE_PRIVATE);
 
-        try {
-            String edgeMarkerString = prefs.getString("edgeMarker", TrackingValues.EdgeMarkerType.NONE.name());
-            trackingValues.setEdgeMarker(TrackingValues.EdgeMarkerType.valueOf(edgeMarkerString));
-        } catch (IllegalArgumentException e) {
-            trackingValues.setEdgeMarker(TrackingValues.EdgeMarkerType.NONE);
-        }
+            // Mit Validierung laden
+            trackingValues.setBackgroundColor(
+                    prefs.getString(AppConstants.Prefs.KEY_BACKGROUND_COLOR, AppConstants.DEFAULT_BACKGROUND_COLOR));
+            trackingValues.setMarkerColor(
+                    prefs.getString(AppConstants.Prefs.KEY_MARKER_COLOR, AppConstants.DEFAULT_MARKER_COLOR));
+            trackingValues.setMarkerDensity(
+                    prefs.getInt(AppConstants.Prefs.KEY_MARKER_DENSITY, 1));
+            trackingValues.setMarkerSize(
+                    prefs.getInt(AppConstants.Prefs.KEY_MARKER_SIZE, 1));
 
-        try {
-            String scrollMarkerString = prefs.getString("scrollMarker", TrackingValues.ScrollMarkerType.NONE.name());
-            trackingValues.setScrollMarker(TrackingValues.ScrollMarkerType.valueOf(scrollMarkerString));
-        } catch (IllegalArgumentException e) {
-            trackingValues.setScrollMarker(TrackingValues.ScrollMarkerType.NONE);
+            // Enum-Werte sicher wiederherstellen
+            loadMarkerTypeEnum(prefs, trackingValues);
+            loadEdgeMarkerEnum(prefs, trackingValues);
+            loadScrollMarkerEnum(prefs, trackingValues);
+
+            Log.d(TAG, "Einstellungen erfolgreich geladen");
+
+        } catch (Exception e) {
+            Log.e(TAG, "Fehler beim Laden der Einstellungen, verwende Standardwerte", e);
         }
 
         return trackingValues;
+    }
+
+    /**
+     * Hilfsmethoden für sichere Enum-Ladung ohne Java 8 Features
+     */
+    private static void loadMarkerTypeEnum(SharedPreferences prefs, TrackingValues trackingValues) {
+        try {
+            String value = prefs.getString(AppConstants.Prefs.KEY_MARKER_TYPE, TrackingValues.MarkerType.CROSS.name());
+            TrackingValues.MarkerType enumValue = TrackingValues.MarkerType.valueOf(value);
+            trackingValues.setMarkerType(enumValue);
+        } catch (IllegalArgumentException e) {
+            Log.w(TAG, "Ungültiger MarkerType-Wert, verwende Standard: " + TrackingValues.MarkerType.CROSS);
+            trackingValues.setMarkerType(TrackingValues.MarkerType.CROSS);
+        }
+    }
+
+    private static void loadEdgeMarkerEnum(SharedPreferences prefs, TrackingValues trackingValues) {
+        try {
+            String value = prefs.getString(AppConstants.Prefs.KEY_EDGE_MARKER, TrackingValues.EdgeMarkerType.NONE.name());
+            TrackingValues.EdgeMarkerType enumValue = TrackingValues.EdgeMarkerType.valueOf(value);
+            trackingValues.setEdgeMarker(enumValue);
+        } catch (IllegalArgumentException e) {
+            Log.w(TAG, "Ungültiger EdgeMarkerType-Wert, verwende Standard: " + TrackingValues.EdgeMarkerType.NONE);
+            trackingValues.setEdgeMarker(TrackingValues.EdgeMarkerType.NONE);
+        }
+    }
+
+    private static void loadScrollMarkerEnum(SharedPreferences prefs, TrackingValues trackingValues) {
+        try {
+            String value = prefs.getString(AppConstants.Prefs.KEY_SCROLL_MARKER, TrackingValues.ScrollMarkerType.NONE.name());
+            TrackingValues.ScrollMarkerType enumValue = TrackingValues.ScrollMarkerType.valueOf(value);
+            trackingValues.setScrollMarker(enumValue);
+        } catch (IllegalArgumentException e) {
+            Log.w(TAG, "Ungültiger ScrollMarkerType-Wert, verwende Standard: " + TrackingValues.ScrollMarkerType.NONE);
+            trackingValues.setScrollMarker(TrackingValues.ScrollMarkerType.NONE);
+        }
+    }
+
+    // ========== HELPER METHODS ==========
+
+    /**
+     * Entfernt alle Marker aus einer Liste
+     */
+    private static void clearMarkers(@NonNull ArrayList<ImageView> markerList) {
+        for (ImageView marker : markerList) {
+            if (marker != null) {
+                marker.setImageResource(0);
+                marker.clearColorFilter();
+            }
+        }
+    }
+
+    /**
+     * Berechnet die Helligkeit einer Farbe
+     */
+    public static boolean isColorBright(int color) {
+        int red = Color.red(color);
+        int green = Color.green(color);
+        int blue = Color.blue(color);
+
+        double luminance = (0.299 * red + 0.587 * green + 0.114 * blue) / 255.0;
+        return luminance > AppConstants.UI.COLOR_BRIGHTNESS_THRESHOLD;
     }
 }

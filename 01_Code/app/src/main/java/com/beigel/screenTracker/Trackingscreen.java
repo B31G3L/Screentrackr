@@ -3,6 +3,7 @@ package com.beigel.screenTracker;
 import android.animation.ValueAnimator;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
@@ -24,110 +25,110 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 /**
- * Vollbildschirm-Tracking-Ansicht mit verbessertem unendlichem Scrolling und Momentum-Scrolling
+ * Aufgeräumte Vollbildschirm-Tracking-Ansicht
+ * - Verwendet AppConstants für alle Magic Numbers
+ * - Verbessertes Error Handling und Logging
+ * - Saubere Trennung der Verantwortlichkeiten
+ * - Bessere Performance durch optimierte Marker-Verwaltung
  */
 public class Trackingscreen extends AppCompatActivity implements GestureDetector.OnGestureListener {
 
+    private static final String TAG = AppConstants.LogTags.TRACKING;
+
+    // UI Components
     private ActivityTrackingscreenBinding binding;
-    private TrackingValues trackingValues;
     private GestureDetectorCompat gestureDetector;
 
-    // Statische Marker (Original-Layout)
-    private ArrayList<ImageView> trackingPointList1;
-    private ArrayList<ImageView> trackingPointList2;
-    private ArrayList<ImageView> trackingPointList3;
-    private ArrayList<ImageView> trackingPointListE;
+    // Core Data
+    private TrackingValues trackingValues;
 
-    // Dynamische Scroll-Marker
-    private ArrayList<DynamicMarker> dynamicScrollMarkers;
-    private ConstraintLayout scrollMarkerLayer;
+    // Marker Management
+    private StaticMarkerManager staticMarkerManager;
+    private DynamicMarkerManager dynamicMarkerManager;
 
-    // Scroll-Tracking
-    private float totalScrollX = 0f;
-    private float totalScrollY = 0f;
+    // Screen Properties
     private int screenWidth;
     private int screenHeight;
-
-    // Momentum-Scrolling Variablen
-    private ValueAnimator momentumAnimator;
-    private boolean isMomentumScrolling = false;
-
-    // Momentum-Scrolling Konstanten
-    private static final float MOMENTUM_FRICTION = 0.85f; // Reibungsfaktor
-    private static final int MOMENTUM_DURATION = 2000; // Maximale Dauer in ms
-    private static final float MIN_VELOCITY = 50f; // Mindestgeschwindigkeit für Momentum
-
-    // Separate Basis-Positionen für verschiedene Scroll-Modi
-    // Für vertikales Scrollen: Links und Rechts bei 33% und 66%
-    private static final float[] VERTICAL_BASE_X = {-0.25f, 0.25f}; // Bei 33% und 67% horizontal
-    private static final float[] VERTICAL_BASE_Y = {0.0f, 0.0f};    // Beide in der Mitte
-
-    // Für horizontales Scrollen: Oben und Unten bei 33% und 66%
-    private static final float[] HORIZONTAL_BASE_X = {0.0f, 0.0f};    // Beide in der Mitte
-    private static final float[] HORIZONTAL_BASE_Y = {-0.25f, 0.25f}; // Bei 33% und 67% vertikal
-
-    private static final int MARKER_SPACING = 800; // Größerer Abstand zwischen Markern in px
-    private static final int MAX_MARKERS = 200; // Mehr Marker für echtes unendliches Scrollen
-    private static final int CLEANUP_DISTANCE = MARKER_SPACING * 6; // Größerer Cleanup-Bereich
-    private static final int GENERATION_BUFFER = MARKER_SPACING * 4; // Buffer für Marker-Generierung
-
-    /**
-     * Klasse für dynamische Marker mit Position
-     */
-    private static class DynamicMarker {
-        ImageView imageView;
-        float worldX, worldY; // Position in der virtuellen Welt
-        int markerIndex; // Welcher der 4 Basis-Marker (0-3)
-
-        DynamicMarker(ImageView imageView, float worldX, float worldY, int markerIndex) {
-            this.imageView = imageView;
-            this.worldX = worldX;
-            this.worldY = worldY;
-            this.markerIndex = markerIndex;
-        }
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // View Binding initialisieren
+        Log.d(TAG, "Trackingscreen onCreate gestartet");
+
+        try {
+            initializeUI();
+            loadTrackingValues();
+            initializeManagers();
+            setupFullscreen();
+            setupTracking();
+
+            Log.d(TAG, "Trackingscreen erfolgreich initialisiert");
+        } catch (Exception e) {
+            Log.e(TAG, "Fehler bei Trackingscreen Initialisierung", e);
+            finish();
+        }
+    }
+
+    // ========== INITIALIZATION ==========
+
+    /**
+     * Initialisiert die UI-Komponenten
+     */
+    private void initializeUI() {
         binding = ActivityTrackingscreenBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        // Gesten-Erkennung initialisieren
+        gestureDetector = new GestureDetectorCompat(this, this);
+
+        Log.d(TAG, "UI-Komponenten initialisiert");
+    }
+
+    /**
+     * Lädt die TrackingValues aus dem Intent
+     */
+    private void loadTrackingValues() {
+        trackingValues = (TrackingValues) getIntent().getSerializableExtra("trackingValues");
+        if (trackingValues == null) {
+            Log.w(TAG, "Keine TrackingValues im Intent gefunden, verwende Standardwerte");
+            trackingValues = new TrackingValues();
+        } else {
+            Log.d(TAG, "TrackingValues geladen: " + trackingValues.toString());
+        }
+    }
+
+    /**
+     * Initialisiert die Manager-Klassen
+     */
+    private void initializeManagers() {
+        staticMarkerManager = new StaticMarkerManager(binding, trackingValues);
+        dynamicMarkerManager = new DynamicMarkerManager(binding.scrollMarkerLayer, trackingValues);
+
+        Log.d(TAG, "Manager-Klassen initialisiert");
+    }
+
+    /**
+     * Konfiguriert den Vollbildmodus
+     */
+    private void setupFullscreen() {
         // ActionBar ausblenden
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.hide();
         }
 
-        // Systemleisten ausblenden für Vollbildmodus
+        // Systemleisten ausblenden
         hideSystemBars();
-
-        // Gesten-Erkennung für Navigation
-        gestureDetector = new GestureDetectorCompat(this, this);
-
-        // Scroll-Marker Layer Referenz
-        scrollMarkerLayer = binding.scrollMarkerLayer;
-
-        // Dynamische Marker initialisieren
-        dynamicScrollMarkers = new ArrayList<>();
-
-        // Marker-Listen initialisieren
-        initializeMarkerLists();
-
-        // Tracking-Werte aus dem Intent laden
-        loadTrackingValues();
 
         // Bildschirmgröße ermitteln
         getScreenDimensions();
 
-        // Tracking-Ansicht erstellen
-        setupTracking();
+        Log.d(TAG, "Vollbildmodus konfiguriert");
     }
 
     /**
-     * Blendet die Systemleisten aus für einen echten Vollbildmodus
+     * Blendet die Systemleisten aus
      */
     private void hideSystemBars() {
         WindowInsetsControllerCompat windowInsetsController =
@@ -148,511 +149,35 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
             screenWidth = getWindow().getDecorView().getWidth();
             screenHeight = getWindow().getDecorView().getHeight();
 
-            // Nach dem Ermitteln der Bildschirmgröße die initialen Marker erstellen
-            if (trackingValues.getScrollMarker() != TrackingValues.ScrollMarkerType.NONE) {
-                createInitialScrollMarkers();
-            }
+            Log.d(TAG, String.format("Bildschirmgröße: %dx%d", screenWidth, screenHeight));
+
+            // Nach Bildschirmgröße-Ermittlung: dynamische Marker initialisieren
+            dynamicMarkerManager.initializeWithScreenSize(screenWidth, screenHeight);
         });
     }
 
     /**
-     * Initialisiert die Listen für die statischen Marker-Gruppen
-     */
-    private void initializeMarkerLists() {
-        trackingPointList1 = new ArrayList<>();
-        trackingPointList2 = new ArrayList<>();
-        trackingPointList3 = new ArrayList<>();
-        trackingPointListE = new ArrayList<>();
-
-        // Gruppe 1 (Haupt-Layer)
-        trackingPointList1.add(binding.trackingPoint11);
-        trackingPointList1.add(binding.trackingPoint12);
-        trackingPointList1.add(binding.trackingPoint13);
-        trackingPointList1.add(binding.trackingPoint14);
-        trackingPointList1.add(binding.trackingPoint15);
-
-        // Gruppe 2 (Haupt-Layer)
-        trackingPointList2.add(binding.trackingPoint21);
-        trackingPointList2.add(binding.trackingPoint22);
-        trackingPointList2.add(binding.trackingPoint23);
-        trackingPointList2.add(binding.trackingPoint24);
-
-        // Gruppe 3 (Haupt-Layer)
-        trackingPointList3.add(binding.trackingPoint31);
-        trackingPointList3.add(binding.trackingPoint32);
-        trackingPointList3.add(binding.trackingPoint33);
-        trackingPointList3.add(binding.trackingPoint34);
-
-        // Eckmarker (Haupt-Layer)
-        trackingPointListE.add(binding.trackingPointE1);
-        trackingPointListE.add(binding.trackingPointE2);
-        trackingPointListE.add(binding.trackingPointE3);
-        trackingPointListE.add(binding.trackingPointE4);
-    }
-
-    /**
-     * Lädt die Tracking-Einstellungen aus dem Intent
-     */
-    private void loadTrackingValues() {
-        trackingValues = (TrackingValues) getIntent().getSerializableExtra("trackingValues");
-        if (trackingValues == null) {
-            trackingValues = new TrackingValues();
-        }
-    }
-
-    /**
-     * Richtet die Tracking-Ansicht gemäß den Einstellungen ein
+     * Richtet das Tracking-System ein
      */
     private void setupTracking() {
-        // Alle Marker zurücksetzen
-        resetAllMarkers();
+        try {
+            // Hintergrundfarbe setzen
+            int bgColor = Utilities.parseColorSafely(trackingValues.getBackgroundColor());
+            binding.trackingBackground.setBackgroundColor(bgColor);
 
-        // Hintergrundfarbe setzen
-        binding.trackingBackground.setBackgroundColor(
-                Color.parseColor(trackingValues.getBackgroundColor()));
+            // Statische Marker erstellen
+            staticMarkerManager.setupMarkers();
 
-        // Statische Marker entsprechend der ausgewählten Dichte erstellen
-        setupStaticMarkers();
+            // Dynamische Marker-System initialisieren
+            dynamicMarkerManager.setupScrollMarkers();
 
-        // Eckmarker erstellen, falls ausgewählt
-        setupEdgeMarkers();
-
-        // Scroll-System initialisieren
-        setupScrollMarkers();
-    }
-
-    /**
-     * Setzt alle Marker zurück
-     */
-    private void resetAllMarkers() {
-        // Statische Marker zurücksetzen
-        for (ImageView marker : trackingPointList1) {
-            marker.setImageResource(0);
-        }
-        for (ImageView marker : trackingPointList2) {
-            marker.setImageResource(0);
-        }
-        for (ImageView marker : trackingPointList3) {
-            marker.setImageResource(0);
-        }
-        for (ImageView marker : trackingPointListE) {
-            marker.setImageResource(0);
-        }
-
-        // Dynamische Marker zurücksetzen
-        clearDynamicMarkers();
-        scrollMarkerLayer.setVisibility(View.GONE);
-    }
-
-    /**
-     * Erstellt statische Marker entsprechend der ausgewählten Dichte
-     */
-    private void setupStaticMarkers() {
-        int markerDensity = trackingValues.getMarkerDensity();
-
-        switch (markerDensity) {
-            case 0:
-                break;
-            case 1:
-                Utilities.createMarker(trackingPointList1, trackingValues);
-                break;
-            case 2:
-                Utilities.createMarker(trackingPointList1, trackingValues);
-                Utilities.createMarker(trackingPointList2, trackingValues);
-                break;
-            case 3:
-                Utilities.createMarker(trackingPointList1, trackingValues);
-                Utilities.createMarker(trackingPointList2, trackingValues);
-                Utilities.createMarker(trackingPointList3, trackingValues);
-                break;
+            Log.d(TAG, "Tracking-System erfolgreich eingerichtet");
+        } catch (Exception e) {
+            Log.e(TAG, "Fehler beim Einrichten des Tracking-Systems", e);
         }
     }
 
-    /**
-     * Erstellt Eckmarker, falls in den Einstellungen aktiviert
-     */
-    private void setupEdgeMarkers() {
-        if (trackingValues.getEdgeMarker() != TrackingValues.EdgeMarkerType.NONE) {
-            Utilities.createEdgeMarker(trackingPointListE, trackingValues);
-        }
-    }
-
-    /**
-     * Initialisiert das Scroll-Marker System
-     */
-    private void setupScrollMarkers() {
-        TrackingValues.ScrollMarkerType scrollType = trackingValues.getScrollMarker();
-
-        if (scrollType == TrackingValues.ScrollMarkerType.NONE) {
-            scrollMarkerLayer.setVisibility(View.GONE);
-            return;
-        }
-
-        scrollMarkerLayer.setVisibility(View.VISIBLE);
-
-        // Initiale Marker werden nach Bildschirmgröße-Ermittlung erstellt
-    }
-
-    /**
-     * Erstellt die initialen Scroll-Marker basierend auf dem Scroll-Typ
-     */
-    private void createInitialScrollMarkers() {
-        TrackingValues.ScrollMarkerType scrollType = trackingValues.getScrollMarker();
-
-        switch (scrollType) {
-            case VERTICAL:
-                // Nur 2 Marker: Links und Rechts
-                for (int i = 0; i < 2; i++) {
-                    float worldX = VERTICAL_BASE_X[i] * screenWidth;
-                    float worldY = VERTICAL_BASE_Y[i] * screenHeight;
-                    createDynamicMarker(worldX, worldY, i);
-                }
-                break;
-
-            case HORIZONTAL:
-                // Nur 2 Marker: Oben und Unten
-                for (int i = 0; i < 2; i++) {
-                    float worldX = HORIZONTAL_BASE_X[i] * screenWidth;
-                    float worldY = HORIZONTAL_BASE_Y[i] * screenHeight;
-                    createDynamicMarker(worldX, worldY, i);
-                }
-                break;
-        }
-    }
-
-    /**
-     * Erstellt einen neuen dynamischen Marker an der angegebenen Weltposition
-     */
-    private void createDynamicMarker(float worldX, float worldY, int markerIndex) {
-        // Wenn maximale Anzahl erreicht ist, entferne zuerst weit entfernte Marker
-        if (dynamicScrollMarkers.size() >= MAX_MARKERS) {
-            removeFarMarkers(); // Cleanup vor dem Hinzufügen neuer Marker
-
-            // Falls immer noch zu viele Marker vorhanden sind, entferne die ältesten
-            if (dynamicScrollMarkers.size() >= MAX_MARKERS) {
-                DynamicMarker oldestMarker = dynamicScrollMarkers.get(0);
-                scrollMarkerLayer.removeView(oldestMarker.imageView);
-                dynamicScrollMarkers.remove(0);
-            }
-        }
-
-        // Debug: Marker-Erstellung ausgeben
-        System.out.println("Creating marker at: " + worldX + ", " + worldY + " (Total: " + (dynamicScrollMarkers.size() + 1) + ")");
-
-        // Neuen ImageView erstellen
-        ImageView marker = new ImageView(this);
-
-        // Marker-Eigenschaften setzen
-        int markerType = getMarkerDrawableResource();
-        int markerSize = Utilities.getMarkerSize(trackingValues.getMarkerSize());
-        int markerColor = Color.parseColor(trackingValues.getMarkerColor());
-
-        marker.setImageResource(markerType);
-        marker.setColorFilter(markerColor);
-
-        // Layout-Parameter setzen
-        ConstraintLayout.LayoutParams params = new ConstraintLayout.LayoutParams(markerSize, markerSize);
-        marker.setLayoutParams(params);
-
-        // Zur ScrollLayer hinzufügen
-        scrollMarkerLayer.addView(marker);
-
-        // Position berechnen und setzen
-        updateMarkerPosition(marker, worldX, worldY);
-
-        // Zu Liste hinzufügen
-        dynamicScrollMarkers.add(new DynamicMarker(marker, worldX, worldY, markerIndex));
-    }
-
-    /**
-     * Aktualisiert die Position eines Markers basierend auf der Weltposition und aktuellen Scroll-Offset
-     * Positioniert den Marker zentriert, nicht an der oberen linken Ecke
-     */
-    private void updateMarkerPosition(ImageView marker, float worldX, float worldY) {
-        float screenX = worldX - totalScrollX + screenWidth / 2f;
-        float screenY = worldY - totalScrollY + screenHeight / 2f;
-
-        // Marker-Größe berücksichtigen für zentrierte Positionierung
-        int markerSize = marker.getLayoutParams().width;
-        float centeredX = screenX - (markerSize / 2f);
-        float centeredY = screenY - (markerSize / 2f);
-
-        marker.setX(centeredX);
-        marker.setY(centeredY);
-    }
-
-    /**
-     * Aktualisiert alle dynamischen Marker basierend auf der neuen Scroll-Position
-     */
-    private void updateDynamicMarkers() {
-        // Alle bestehenden Marker aktualisieren
-        for (DynamicMarker dynamicMarker : dynamicScrollMarkers) {
-            updateMarkerPosition(dynamicMarker.imageView, dynamicMarker.worldX, dynamicMarker.worldY);
-        }
-
-        // Marker außerhalb des Bildschirms entfernen
-        removeFarMarkers();
-
-        // Neue Marker hinzufügen wo nötig
-        addNewMarkers();
-    }
-
-    /**
-     * Entfernt Marker, die zu weit vom Bildschirm entfernt sind
-     */
-    private void removeFarMarkers() {
-        Iterator<DynamicMarker> iterator = dynamicScrollMarkers.iterator();
-        while (iterator.hasNext()) {
-            DynamicMarker marker = iterator.next();
-
-            float screenX = marker.worldX - totalScrollX + screenWidth / 2f;
-            float screenY = marker.worldY - totalScrollY + screenHeight / 2f;
-
-            // Entferne Marker, die sehr weit außerhalb des Bildschirms sind
-            if (screenX < -CLEANUP_DISTANCE || screenX > screenWidth + CLEANUP_DISTANCE ||
-                    screenY < -CLEANUP_DISTANCE || screenY > screenHeight + CLEANUP_DISTANCE) {
-
-                scrollMarkerLayer.removeView(marker.imageView);
-                iterator.remove();
-            }
-        }
-    }
-
-    /**
-     * Fügt neue Marker hinzu basierend auf der Scroll-Richtung
-     */
-    private void addNewMarkers() {
-        TrackingValues.ScrollMarkerType scrollType = trackingValues.getScrollMarker();
-
-        switch (scrollType) {
-            case VERTICAL:
-                // Nur für die 2 vertikalen Basis-Positionen (Links und Rechts)
-                for (int i = 0; i < 2; i++) {
-                    checkAndAddMarkersForBase(i, scrollType);
-                }
-                break;
-
-            case HORIZONTAL:
-                // Nur für die 2 horizontalen Basis-Positionen (Oben und Unten)
-                for (int i = 0; i < 2; i++) {
-                    checkAndAddMarkersForBase(i, scrollType);
-                }
-                break;
-        }
-    }
-
-    /**
-     * Prüft und fügt neue Marker für eine bestimmte Basis-Position hinzu
-     */
-    private void checkAndAddMarkersForBase(int baseIndex, TrackingValues.ScrollMarkerType scrollType) {
-        float baseWorldX, baseWorldY;
-
-        switch (scrollType) {
-            case VERTICAL:
-                baseWorldX = VERTICAL_BASE_X[baseIndex] * screenWidth;
-                baseWorldY = VERTICAL_BASE_Y[baseIndex] * screenHeight;
-                // Vertikal scrollen - neue Marker oben und unten hinzufügen
-                addMarkersInLine(baseWorldX, baseWorldY, baseIndex, 0, MARKER_SPACING);
-                break;
-
-            case HORIZONTAL:
-                baseWorldX = HORIZONTAL_BASE_X[baseIndex] * screenWidth;
-                baseWorldY = HORIZONTAL_BASE_Y[baseIndex] * screenHeight;
-                // Horizontal scrollen - neue Marker links und rechts hinzufügen
-                addMarkersInLine(baseWorldX, baseWorldY, baseIndex, MARKER_SPACING, 0);
-                break;
-        }
-    }
-
-    /**
-     * Verbesserte Marker-Erstellung für echtes unendliches Scrollen
-     */
-    private void addMarkersInLine(float baseX, float baseY, int baseIndex, float deltaX, float deltaY) {
-        // Berechne aktuelle Scroll-Position
-        float currentScrollX = totalScrollX;
-        float currentScrollY = totalScrollY;
-
-        // Berechne wie weit wir von der Basis-Position entfernt sind
-        float offsetX = 0;
-        float offsetY = 0;
-
-        if (deltaX != 0) { // Horizontal scrolling
-            offsetX = currentScrollX;
-        }
-        if (deltaY != 0) { // Vertical scrolling
-            offsetY = currentScrollY;
-        }
-
-        // Berechne den Index-Bereich basierend auf der aktuellen Position
-        int centerIndexX = Math.round(offsetX / MARKER_SPACING);
-        int centerIndexY = Math.round(offsetY / MARKER_SPACING);
-
-        // Erstelle Marker in einem großen Bereich um die aktuelle Position
-        int range = 10; // Marker in beide Richtungen erstellen
-
-        for (int i = -range; i <= range; i++) {
-            float newWorldX = baseX;
-            float newWorldY = baseY;
-
-            if (deltaX != 0) {
-                newWorldX = baseX + deltaX * (centerIndexX + i);
-            }
-            if (deltaY != 0) {
-                newWorldY = baseY + deltaY * (centerIndexY + i);
-            }
-
-            if (isMarkerNeeded(newWorldX, newWorldY, currentScrollX, currentScrollY)) {
-                if (!markerExistsAt(newWorldX, newWorldY)) {
-                    createDynamicMarker(newWorldX, newWorldY, baseIndex);
-                }
-            }
-        }
-    }
-
-    /**
-     * Verbesserte Marker-Bedarfs-Prüfung für unendliches Scrollen
-     */
-    private boolean isMarkerNeeded(float worldX, float worldY, float scrollX, float scrollY) {
-        // Berechne Screen-Position relativ zur aktuellen Scroll-Position
-        float screenX = worldX - scrollX + screenWidth / 2f;
-        float screenY = worldY - scrollY + screenHeight / 2f;
-
-        // Großer Buffer für unendliches Scrollen - Marker werden weit voraus generiert
-        int buffer = GENERATION_BUFFER; // 4 * MARKER_SPACING = 3200px Buffer
-        return screenX >= -buffer && screenX <= screenWidth + buffer &&
-                screenY >= -buffer && screenY <= screenHeight + buffer;
-    }
-
-    /**
-     * Optimierte Marker-Erkennung für unendliches Scrollen
-     */
-    private boolean markerExistsAt(float worldX, float worldY) {
-        float tolerance = MARKER_SPACING / 4f; // Kleinere Toleranz für präzisere Platzierung
-
-        for (DynamicMarker marker : dynamicScrollMarkers) {
-            if (Math.abs(marker.worldX - worldX) < tolerance && Math.abs(marker.worldY - worldY) < tolerance) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Entfernt alle dynamischen Marker
-     */
-    private void clearDynamicMarkers() {
-        for (DynamicMarker marker : dynamicScrollMarkers) {
-            scrollMarkerLayer.removeView(marker.imageView);
-        }
-        dynamicScrollMarkers.clear();
-    }
-
-    /**
-     * Bestimmt den Drawable-Ressourcen-ID basierend auf dem Marker-Typ
-     */
-    private int getMarkerDrawableResource() {
-        switch (trackingValues.getMarkerType()) {
-            case PIE:
-                return R.drawable.ic_marker_pie;
-            case CIRCLE:
-                return R.drawable.ic_marker_circle;
-            case TRIANGLE:
-                return R.drawable.ic_marker_triangle;
-            case CROSS:
-            default:
-                return R.drawable.ic_marker_cross;
-        }
-    }
-
-    /**
-     * Startet das Momentum-Scrolling mit der angegebenen Anfangsgeschwindigkeit
-     */
-    private void startMomentumScroll(float initialVelocity, boolean isVertical) {
-        // Vorherigen Animator stoppen falls aktiv
-        if (momentumAnimator != null && momentumAnimator.isRunning()) {
-            momentumAnimator.cancel();
-        }
-
-        isMomentumScrolling = true;
-
-        // Berechne Gesamt-Scroll-Distanz basierend auf Anfangsgeschwindigkeit
-        // Formel: distance = velocity² / (2 * deceleration)
-        float deceleration = 2000f; // Pixel pro Sekunde²
-        float totalDistance = (initialVelocity * initialVelocity) / (2 * deceleration);
-
-        // Vorzeichen beibehalten
-        if (initialVelocity < 0) {
-            totalDistance = -totalDistance;
-        }
-
-        // Animator erstellen
-        momentumAnimator = ValueAnimator.ofFloat(0f, totalDistance);
-        momentumAnimator.setDuration(MOMENTUM_DURATION);
-        momentumAnimator.setInterpolator(new DecelerateInterpolator(2.0f)); // Starke Verlangsamung
-
-        // Startpositionen merken
-        final float startScrollX = totalScrollX;
-        final float startScrollY = totalScrollY;
-
-        momentumAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            private float lastAnimatedValue = 0f;
-
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                if (!isMomentumScrolling) {
-                    animation.cancel();
-                    return;
-                }
-
-                float currentAnimatedValue = (Float) animation.getAnimatedValue();
-                float deltaValue = currentAnimatedValue - lastAnimatedValue;
-                lastAnimatedValue = currentAnimatedValue;
-
-                // Scroll-Position basierend auf Animation aktualisieren
-                if (isVertical) {
-                    totalScrollY += deltaValue;
-                } else {
-                    totalScrollX += deltaValue;
-                }
-
-                // Debug-Info
-                System.out.println("Momentum Scroll - X: " + totalScrollX + ", Y: " + totalScrollY +
-                        ", Delta: " + deltaValue + ", Progress: " + animation.getAnimatedFraction());
-
-                // Marker aktualisieren
-                updateDynamicMarkers();
-            }
-        });
-
-        momentumAnimator.addListener(new android.animation.Animator.AnimatorListener() {
-            @Override
-            public void onAnimationStart(android.animation.Animator animation) {
-                System.out.println("Momentum scrolling started");
-            }
-
-            @Override
-            public void onAnimationEnd(android.animation.Animator animation) {
-                isMomentumScrolling = false;
-                System.out.println("Momentum scrolling ended");
-            }
-
-            @Override
-            public void onAnimationCancel(android.animation.Animator animation) {
-                isMomentumScrolling = false;
-                System.out.println("Momentum scrolling cancelled");
-            }
-
-            @Override
-            public void onAnimationRepeat(android.animation.Animator animation) {
-                // Nicht verwendet
-            }
-        });
-
-        // Animation starten
-        momentumAnimator.start();
-    }
-
-    // GestureDetector.OnGestureListener Implementierung
+    // ========== GESTURE DETECTION ==========
 
     @Override
     public boolean onDown(@NonNull MotionEvent e) {
@@ -666,44 +191,24 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
 
     @Override
     public boolean onSingleTapUp(@NonNull MotionEvent e) {
-        // Tap kann zum Beenden verwendet werden
+        // Tap beendet das Tracking
+        Log.d(TAG, "Single Tap erkannt - beende Tracking");
         finish();
         return true;
     }
 
     @Override
     public boolean onScroll(@NonNull MotionEvent e1, @NonNull MotionEvent e2, float distanceX, float distanceY) {
-        TrackingValues.ScrollMarkerType scrollType = trackingValues.getScrollMarker();
-
-        if (scrollType == TrackingValues.ScrollMarkerType.NONE) {
+        try {
+            boolean handled = dynamicMarkerManager.handleScroll(distanceX, distanceY);
+            if (handled) {
+                Log.v(TAG, String.format("Scroll: dX=%.2f, dY=%.2f", distanceX, distanceY));
+            }
+            return handled;
+        } catch (Exception e) {
+            Log.e(TAG, "Fehler beim Scroll-Handling", e);
             return false;
         }
-
-        // Momentum-Scrolling stoppen wenn Benutzer manuell scrollt
-        if (isMomentumScrolling && momentumAnimator != null) {
-            momentumAnimator.cancel();
-            isMomentumScrolling = false;
-        }
-
-        // Scroll-Position direkt aktualisieren (normale Richtung)
-        switch (scrollType) {
-            case VERTICAL:
-                totalScrollY += distanceY; // Plus für normale Richtung
-                break;
-            case HORIZONTAL:
-                totalScrollX += distanceX; // Plus für normale Richtung
-                break;
-        }
-
-        // Debug: Scroll-Position und Marker-Anzahl ausgeben
-        System.out.println("Manual Scroll - X: " + totalScrollX + ", Y: " + totalScrollY +
-                ", dX: " + distanceX + ", dY: " + distanceY +
-                ", Markers: " + dynamicScrollMarkers.size());
-
-        // Dynamische Marker aktualisieren
-        updateDynamicMarkers();
-
-        return true;
     }
 
     @Override
@@ -713,39 +218,16 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
 
     @Override
     public boolean onFling(@NonNull MotionEvent e1, @NonNull MotionEvent e2, float velocityX, float velocityY) {
-        TrackingValues.ScrollMarkerType scrollType = trackingValues.getScrollMarker();
-
-        if (scrollType == TrackingValues.ScrollMarkerType.NONE) {
+        try {
+            boolean handled = dynamicMarkerManager.handleFling(velocityX, velocityY);
+            if (handled) {
+                Log.d(TAG, String.format("Fling: vX=%.2f, vY=%.2f", velocityX, velocityY));
+            }
+            return handled;
+        } catch (Exception e) {
+            Log.e(TAG, "Fehler beim Fling-Handling", e);
             return false;
         }
-
-        // Bestimme relevante Geschwindigkeit basierend auf Scroll-Typ
-        float relevantVelocity = 0f;
-        boolean isVerticalFling = false;
-
-        switch (scrollType) {
-            case VERTICAL:
-                relevantVelocity = -velocityY; // Negativ für natürliche Richtung
-                isVerticalFling = true;
-                break;
-            case HORIZONTAL:
-                relevantVelocity = -velocityX; // Negativ für natürliche Richtung
-                isVerticalFling = false;
-                break;
-        }
-
-        // Prüfe ob Geschwindigkeit hoch genug für Momentum ist
-        if (Math.abs(relevantVelocity) < MIN_VELOCITY) {
-            return false;
-        }
-
-        // Starte Momentum-Scrolling
-        startMomentumScroll(relevantVelocity, isVerticalFling);
-
-        System.out.println("Fling started - Velocity: " + relevantVelocity +
-                ", Type: " + (isVerticalFling ? "Vertical" : "Horizontal"));
-
-        return true;
     }
 
     @Override
@@ -753,27 +235,511 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
         return gestureDetector.onTouchEvent(event) || super.onTouchEvent(event);
     }
 
+    // ========== LIFECYCLE ==========
+
     @Override
     protected void onPause() {
         super.onPause();
-
-        // Momentum-Scrolling pausieren
-        if (momentumAnimator != null && momentumAnimator.isRunning()) {
-            momentumAnimator.cancel();
-            isMomentumScrolling = false;
+        try {
+            dynamicMarkerManager.pauseAnimations();
+            Log.d(TAG, "Animationen pausiert");
+        } catch (Exception e) {
+            Log.e(TAG, "Fehler beim Pausieren", e);
         }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        try {
+            if (dynamicMarkerManager != null) {
+                dynamicMarkerManager.cleanup();
+            }
+            binding = null;
+            Log.d(TAG, "Trackingscreen aufgeräumt");
+        } catch (Exception e) {
+            Log.e(TAG, "Fehler beim Aufräumen", e);
+        }
+    }
 
-        // Momentum-Animator aufräumen
-        if (momentumAnimator != null && momentumAnimator.isRunning()) {
-            momentumAnimator.cancel();
+    // ========== MANAGER CLASSES ==========
+
+    /**
+     * Verwaltet statische Marker (normale Tracking-Punkte und Eckmarker)
+     */
+    private static class StaticMarkerManager {
+        private final ActivityTrackingscreenBinding binding;
+        private final TrackingValues trackingValues;
+
+        private ArrayList<ImageView> trackingPointList1;
+        private ArrayList<ImageView> trackingPointList2;
+        private ArrayList<ImageView> trackingPointList3;
+        private ArrayList<ImageView> trackingPointListE;
+
+        public StaticMarkerManager(@NonNull ActivityTrackingscreenBinding binding,
+                                   @NonNull TrackingValues trackingValues) {
+            this.binding = binding;
+            this.trackingValues = trackingValues;
+            initializeMarkerLists();
         }
 
-        clearDynamicMarkers();
-        binding = null;
+        /**
+         * Initialisiert die Marker-Listen
+         */
+        private void initializeMarkerLists() {
+            trackingPointList1 = new ArrayList<>();
+            trackingPointList2 = new ArrayList<>();
+            trackingPointList3 = new ArrayList<>();
+            trackingPointListE = new ArrayList<>();
+
+            // Gruppe 1
+            trackingPointList1.add(binding.trackingPoint11);
+            trackingPointList1.add(binding.trackingPoint12);
+            trackingPointList1.add(binding.trackingPoint13);
+            trackingPointList1.add(binding.trackingPoint14);
+            trackingPointList1.add(binding.trackingPoint15);
+
+            // Gruppe 2
+            trackingPointList2.add(binding.trackingPoint21);
+            trackingPointList2.add(binding.trackingPoint22);
+            trackingPointList2.add(binding.trackingPoint23);
+            trackingPointList2.add(binding.trackingPoint24);
+
+            // Gruppe 3
+            trackingPointList3.add(binding.trackingPoint31);
+            trackingPointList3.add(binding.trackingPoint32);
+            trackingPointList3.add(binding.trackingPoint33);
+            trackingPointList3.add(binding.trackingPoint34);
+
+            // Eckmarker
+            trackingPointListE.add(binding.trackingPointE1);
+            trackingPointListE.add(binding.trackingPointE2);
+            trackingPointListE.add(binding.trackingPointE3);
+            trackingPointListE.add(binding.trackingPointE4);
+        }
+
+        /**
+         * Richtet alle statischen Marker ein
+         */
+        public void setupMarkers() {
+            clearAllMarkers();
+
+            // Statische Marker basierend auf Dichte
+            int density = trackingValues.getMarkerDensity();
+            switch (density) {
+                case 0:
+                    Log.d(TAG, "Keine statischen Marker (Dichte 0)");
+                    break;
+                case 1:
+                    Utilities.createMarker(trackingPointList1, trackingValues);
+                    break;
+                case 2:
+                    Utilities.createMarker(trackingPointList1, trackingValues);
+                    Utilities.createMarker(trackingPointList2, trackingValues);
+                    break;
+                case 3:
+                    Utilities.createMarker(trackingPointList1, trackingValues);
+                    Utilities.createMarker(trackingPointList2, trackingValues);
+                    Utilities.createMarker(trackingPointList3, trackingValues);
+                    break;
+            }
+
+            // Eckmarker wenn aktiviert
+            if (trackingValues.getEdgeMarker() != TrackingValues.EdgeMarkerType.NONE) {
+                Utilities.createEdgeMarker(trackingPointListE, trackingValues);
+            }
+
+            Log.d(TAG, "Statische Marker eingerichtet (Dichte: " + density + ")");
+        }
+
+        /**
+         * Entfernt alle statischen Marker
+         */
+        private void clearAllMarkers() {
+            clearMarkerGroup(trackingPointList1);
+            clearMarkerGroup(trackingPointList2);
+            clearMarkerGroup(trackingPointList3);
+            clearMarkerGroup(trackingPointListE);
+        }
+
+        private void clearMarkerGroup(@NonNull ArrayList<ImageView> markerGroup) {
+            for (ImageView marker : markerGroup) {
+                if (marker != null) {
+                    marker.setImageResource(0);
+                    marker.clearColorFilter();
+                }
+            }
+        }
+    }
+
+    /**
+     * Verwaltet dynamische Scroll-Marker mit verbessertem unendlichen Scrolling
+     */
+    private static class DynamicMarkerManager {
+        private final ConstraintLayout scrollMarkerLayer;
+        private final TrackingValues trackingValues;
+
+        private ArrayList<DynamicMarker> dynamicScrollMarkers;
+        private ValueAnimator momentumAnimator;
+
+        private float totalScrollX = 0f;
+        private float totalScrollY = 0f;
+        private int screenWidth;
+        private int screenHeight;
+        private boolean isMomentumScrolling = false;
+
+        public DynamicMarkerManager(@NonNull ConstraintLayout scrollMarkerLayer,
+                                    @NonNull TrackingValues trackingValues) {
+            this.scrollMarkerLayer = scrollMarkerLayer;
+            this.trackingValues = trackingValues;
+            this.dynamicScrollMarkers = new ArrayList<>();
+        }
+
+        public void initializeWithScreenSize(int screenWidth, int screenHeight) {
+            this.screenWidth = screenWidth;
+            this.screenHeight = screenHeight;
+        }
+
+        /**
+         * Richtet das Scroll-Marker System ein
+         */
+        public void setupScrollMarkers() {
+            TrackingValues.ScrollMarkerType scrollType = trackingValues.getScrollMarker();
+
+            if (scrollType == TrackingValues.ScrollMarkerType.NONE) {
+                scrollMarkerLayer.setVisibility(View.GONE);
+                Log.d(TAG, "Scroll-Marker deaktiviert");
+                return;
+            }
+
+            scrollMarkerLayer.setVisibility(View.VISIBLE);
+            createInitialScrollMarkers(scrollType);
+
+            Log.d(TAG, "Scroll-Marker System eingerichtet: " + scrollType);
+        }
+
+        /**
+         * Erstellt initiale Scroll-Marker
+         */
+        private void createInitialScrollMarkers(@NonNull TrackingValues.ScrollMarkerType scrollType) {
+            switch (scrollType) {
+                case VERTICAL:
+                    for (int i = 0; i < 2; i++) {
+                        float worldX = AppConstants.Scrolling.VERTICAL_BASE_X[i] * screenWidth;
+                        float worldY = AppConstants.Scrolling.VERTICAL_BASE_Y[i] * screenHeight;
+                        createDynamicMarker(worldX, worldY, i);
+                    }
+                    break;
+                case HORIZONTAL:
+                    for (int i = 0; i < 2; i++) {
+                        float worldX = AppConstants.Scrolling.HORIZONTAL_BASE_X[i] * screenWidth;
+                        float worldY = AppConstants.Scrolling.HORIZONTAL_BASE_Y[i] * screenHeight;
+                        createDynamicMarker(worldX, worldY, i);
+                    }
+                    break;
+            }
+        }
+
+        /**
+         * Behandelt Scroll-Gesten
+         */
+        public boolean handleScroll(float distanceX, float distanceY) {
+            TrackingValues.ScrollMarkerType scrollType = trackingValues.getScrollMarker();
+
+            if (scrollType == TrackingValues.ScrollMarkerType.NONE) {
+                return false;
+            }
+
+            // Momentum-Scrolling stoppen
+            stopMomentumScrolling();
+
+            // Scroll-Position aktualisieren
+            switch (scrollType) {
+                case VERTICAL:
+                    totalScrollY += distanceY;
+                    break;
+                case HORIZONTAL:
+                    totalScrollX += distanceX;
+                    break;
+            }
+
+            updateDynamicMarkers();
+            return true;
+        }
+
+        /**
+         * Behandelt Fling-Gesten für Momentum-Scrolling
+         */
+        public boolean handleFling(float velocityX, float velocityY) {
+            TrackingValues.ScrollMarkerType scrollType = trackingValues.getScrollMarker();
+
+            if (scrollType == TrackingValues.ScrollMarkerType.NONE) {
+                return false;
+            }
+
+            float relevantVelocity = 0f;
+            boolean isVertical = false;
+
+            switch (scrollType) {
+                case VERTICAL:
+                    relevantVelocity = -velocityY;
+                    isVertical = true;
+                    break;
+                case HORIZONTAL:
+                    relevantVelocity = -velocityX;
+                    isVertical = false;
+                    break;
+            }
+
+            if (Math.abs(relevantVelocity) >= AppConstants.Scrolling.MIN_VELOCITY) {
+                startMomentumScroll(relevantVelocity, isVertical);
+                return true;
+            }
+
+            return false;
+        }
+
+        /**
+         * Startet Momentum-Scrolling
+         */
+        private void startMomentumScroll(float initialVelocity, boolean isVertical) {
+            stopMomentumScrolling();
+
+            isMomentumScrolling = true;
+
+            float deceleration = 2000f;
+            float totalDistance = (initialVelocity * initialVelocity) / (2 * deceleration);
+            if (initialVelocity < 0) totalDistance = -totalDistance;
+
+            momentumAnimator = ValueAnimator.ofFloat(0f, totalDistance);
+            momentumAnimator.setDuration(AppConstants.Scrolling.MOMENTUM_DURATION);
+            momentumAnimator.setInterpolator(new DecelerateInterpolator(2.0f));
+
+            momentumAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                private float lastValue = 0f;
+
+                @Override
+                public void onAnimationUpdate(ValueAnimator animation) {
+                    if (!isMomentumScrolling) {
+                        animation.cancel();
+                        return;
+                    }
+
+                    float currentValue = (Float) animation.getAnimatedValue();
+                    float deltaValue = currentValue - lastValue;
+                    lastValue = currentValue;
+
+                    if (isVertical) {
+                        totalScrollY += deltaValue;
+                    } else {
+                        totalScrollX += deltaValue;
+                    }
+
+                    updateDynamicMarkers();
+                }
+            });
+
+            momentumAnimator.addListener(new android.animation.Animator.AnimatorListener() {
+                @Override
+                public void onAnimationStart(android.animation.Animator animation) {}
+
+                @Override
+                public void onAnimationEnd(android.animation.Animator animation) {
+                    isMomentumScrolling = false;
+                }
+
+                @Override
+                public void onAnimationCancel(android.animation.Animator animation) {
+                    isMomentumScrolling = false;
+                }
+
+                @Override
+                public void onAnimationRepeat(android.animation.Animator animation) {}
+            });
+
+            momentumAnimator.start();
+        }
+
+        /**
+         * Stoppt Momentum-Scrolling
+         */
+        private void stopMomentumScrolling() {
+            if (momentumAnimator != null && momentumAnimator.isRunning()) {
+                momentumAnimator.cancel();
+                isMomentumScrolling = false;
+            }
+        }
+
+        /**
+         * Erstellt einen dynamischen Marker
+         */
+        private void createDynamicMarker(float worldX, float worldY, int markerIndex) {
+            if (dynamicScrollMarkers.size() >= AppConstants.Scrolling.MAX_MARKERS) {
+                removeFarMarkers();
+                if (dynamicScrollMarkers.size() >= AppConstants.Scrolling.MAX_MARKERS) {
+                    DynamicMarker oldest = dynamicScrollMarkers.get(0);
+                    scrollMarkerLayer.removeView(oldest.imageView);
+                    dynamicScrollMarkers.remove(0);
+                }
+            }
+
+            ImageView marker = new ImageView(scrollMarkerLayer.getContext());
+
+            int markerType = Utilities.getMarkerDrawable(trackingValues.getMarkerType());
+            int markerSize = Utilities.getMarkerSizeInPixels(trackingValues.getMarkerSize());
+            int markerColor = Utilities.parseColorSafely(trackingValues.getMarkerColor());
+
+            marker.setImageResource(markerType);
+            marker.setColorFilter(markerColor);
+
+            ConstraintLayout.LayoutParams params = new ConstraintLayout.LayoutParams(markerSize, markerSize);
+            marker.setLayoutParams(params);
+
+            scrollMarkerLayer.addView(marker);
+            updateMarkerPosition(marker, worldX, worldY);
+
+            dynamicScrollMarkers.add(new DynamicMarker(marker, worldX, worldY, markerIndex));
+        }
+
+        /**
+         * Aktualisiert die Position eines Markers
+         */
+        private void updateMarkerPosition(@NonNull ImageView marker, float worldX, float worldY) {
+            float screenX = worldX - totalScrollX + screenWidth / 2f;
+            float screenY = worldY - totalScrollY + screenHeight / 2f;
+
+            int markerSize = marker.getLayoutParams().width;
+            float centeredX = screenX - (markerSize / 2f);
+            float centeredY = screenY - (markerSize / 2f);
+
+            marker.setX(centeredX);
+            marker.setY(centeredY);
+        }
+
+        /**
+         * Aktualisiert alle dynamischen Marker
+         */
+        private void updateDynamicMarkers() {
+            for (DynamicMarker dynamicMarker : dynamicScrollMarkers) {
+                updateMarkerPosition(dynamicMarker.imageView, dynamicMarker.worldX, dynamicMarker.worldY);
+            }
+
+            removeFarMarkers();
+            addNewMarkers();
+        }
+
+        /**
+         * Entfernt weit entfernte Marker
+         */
+        private void removeFarMarkers() {
+            Iterator<DynamicMarker> iterator = dynamicScrollMarkers.iterator();
+            while (iterator.hasNext()) {
+                DynamicMarker marker = iterator.next();
+
+                float screenX = marker.worldX - totalScrollX + screenWidth / 2f;
+                float screenY = marker.worldY - totalScrollY + screenHeight / 2f;
+
+                if (screenX < -AppConstants.Scrolling.CLEANUP_DISTANCE ||
+                        screenX > screenWidth + AppConstants.Scrolling.CLEANUP_DISTANCE ||
+                        screenY < -AppConstants.Scrolling.CLEANUP_DISTANCE ||
+                        screenY > screenHeight + AppConstants.Scrolling.CLEANUP_DISTANCE) {
+
+                    scrollMarkerLayer.removeView(marker.imageView);
+                    iterator.remove();
+                }
+            }
+        }
+
+        /**
+         * Fügt neue Marker hinzu
+         */
+        private void addNewMarkers() {
+            TrackingValues.ScrollMarkerType scrollType = trackingValues.getScrollMarker();
+
+            switch (scrollType) {
+                case VERTICAL:
+                    for (int i = 0; i < 2; i++) {
+                        addMarkersForBase(i, AppConstants.Scrolling.VERTICAL_BASE_X[i] * screenWidth,
+                                AppConstants.Scrolling.VERTICAL_BASE_Y[i] * screenHeight, 0, AppConstants.Scrolling.MARKER_SPACING);
+                    }
+                    break;
+                case HORIZONTAL:
+                    for (int i = 0; i < 2; i++) {
+                        addMarkersForBase(i, AppConstants.Scrolling.HORIZONTAL_BASE_X[i] * screenWidth,
+                                AppConstants.Scrolling.HORIZONTAL_BASE_Y[i] * screenHeight, AppConstants.Scrolling.MARKER_SPACING, 0);
+                    }
+                    break;
+            }
+        }
+
+        private void addMarkersForBase(int baseIndex, float baseX, float baseY, float deltaX, float deltaY) {
+            float offsetX = deltaX != 0 ? totalScrollX : 0;
+            float offsetY = deltaY != 0 ? totalScrollY : 0;
+
+            int centerIndexX = Math.round(offsetX / AppConstants.Scrolling.MARKER_SPACING);
+            int centerIndexY = Math.round(offsetY / AppConstants.Scrolling.MARKER_SPACING);
+
+            int range = 10;
+            for (int i = -range; i <= range; i++) {
+                float newWorldX = baseX;
+                float newWorldY = baseY;
+
+                if (deltaX != 0) newWorldX = baseX + deltaX * (centerIndexX + i);
+                if (deltaY != 0) newWorldY = baseY + deltaY * (centerIndexY + i);
+
+                if (isMarkerNeeded(newWorldX, newWorldY) && !markerExistsAt(newWorldX, newWorldY)) {
+                    createDynamicMarker(newWorldX, newWorldY, baseIndex);
+                }
+            }
+        }
+
+        private boolean isMarkerNeeded(float worldX, float worldY) {
+            float screenX = worldX - totalScrollX + screenWidth / 2f;
+            float screenY = worldY - totalScrollY + screenHeight / 2f;
+
+            int buffer = AppConstants.Scrolling.GENERATION_BUFFER;
+            return screenX >= -buffer && screenX <= screenWidth + buffer &&
+                    screenY >= -buffer && screenY <= screenHeight + buffer;
+        }
+
+        private boolean markerExistsAt(float worldX, float worldY) {
+            float tolerance = AppConstants.Scrolling.MARKER_SPACING / 4f;
+
+            for (DynamicMarker marker : dynamicScrollMarkers) {
+                if (Math.abs(marker.worldX - worldX) < tolerance &&
+                        Math.abs(marker.worldY - worldY) < tolerance) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public void pauseAnimations() {
+            stopMomentumScrolling();
+        }
+
+        public void cleanup() {
+            stopMomentumScrolling();
+            for (DynamicMarker marker : dynamicScrollMarkers) {
+                scrollMarkerLayer.removeView(marker.imageView);
+            }
+            dynamicScrollMarkers.clear();
+        }
+    }
+
+    /**
+     * Repräsentiert einen dynamischen Marker mit Position
+     */
+    private static class DynamicMarker {
+        final ImageView imageView;
+        final float worldX, worldY;
+        final int markerIndex;
+
+        DynamicMarker(@NonNull ImageView imageView, float worldX, float worldY, int markerIndex) {
+            this.imageView = imageView;
+            this.worldX = worldX;
+            this.worldY = worldY;
+            this.markerIndex = markerIndex;
+        }
     }
 }
