@@ -124,8 +124,24 @@ public final class Utilities {
 
     // ========== EDGE MARKERS ==========
 
+
     /**
-     * Erstellt Edge-Marker mit verbessertem Error Handling
+     * Verbesserte Edge-Marker-Größe-Berechnung mit separaten Konstanten
+     */
+    public static int getEdgeMarkerSizeInPixels(int edgeMarkerSize) {
+        switch (edgeMarkerSize) {
+            case 1: return AppConstants.MarkerSizes.EDGE_SIZE_1;
+            case 2: return AppConstants.MarkerSizes.EDGE_SIZE_2;
+            case 3: return AppConstants.MarkerSizes.EDGE_SIZE_3;
+            case 4: return AppConstants.MarkerSizes.EDGE_SIZE_4;
+            case 5: return AppConstants.MarkerSizes.EDGE_SIZE_5;
+            default:
+                Log.w(TAG, "Ungültige Edge-Markergröße: " + edgeMarkerSize + ", verwende Standard");
+                return AppConstants.MarkerSizes.DEFAULT_EDGE_SIZE;
+        }
+    }
+    /**
+     * Erstellt Edge-Marker mit verbessertem Error Handling und konfigurierbarer Größe
      */
     public static void createEdgeMarker(@NonNull ArrayList<ImageView> trackingPointListE,
                                         @NonNull TrackingValues trackingValues) {
@@ -138,18 +154,26 @@ public final class Utilities {
 
         try {
             int edgeMarkerRes = getEdgeMarkerDrawable(edgeType);
+            int edgeMarkerSize = getEdgeMarkerSizeInPixels(trackingValues.getEdgeMarkerSize());  // NEU: Konfigurierbare Größe
             int markerColor = parseColorSafely(trackingValues.getMarkerColor());
 
             for (ImageView marker : trackingPointListE) {
                 if (marker != null) {
                     marker.setImageResource(edgeMarkerRes);
                     marker.setColorFilter(markerColor);
+
+                    // Größe sicher setzen (NEU)
+                    if (marker.getLayoutParams() != null) {
+                        marker.getLayoutParams().height = edgeMarkerSize;
+                        marker.getLayoutParams().width = edgeMarkerSize;
+                        marker.requestLayout();
+                    }
                 } else {
                     Log.w(TAG, "Null ImageView in Edge-Marker-Liste");
                 }
             }
 
-            Log.d(TAG, "Edge-Marker erstellt: " + edgeType);
+            Log.d(TAG, "Edge-Marker erstellt: " + edgeType + ", Größe: " + edgeMarkerSize + "px");
 
         } catch (Exception e) {
             Log.e(TAG, "Fehler beim Erstellen der Edge-Marker", e);
@@ -201,7 +225,7 @@ public final class Utilities {
     // ========== SETTINGS PERSISTENCE ==========
 
     /**
-     * Verbesserte Settings-Speicherung mit AppConstants
+     * Verbesserte Settings-Speicherung mit Edge-Marker-Größe
      */
     public static void saveSettings(@NonNull Context context, @NonNull TrackingValues trackingValues) {
         try {
@@ -212,14 +236,15 @@ public final class Utilities {
             editor.putString(AppConstants.Prefs.KEY_MARKER_COLOR, trackingValues.getMarkerColor());
             editor.putInt(AppConstants.Prefs.KEY_MARKER_DENSITY, trackingValues.getMarkerDensity());
             editor.putInt(AppConstants.Prefs.KEY_MARKER_SIZE, trackingValues.getMarkerSize());
+            editor.putInt(AppConstants.Prefs.KEY_EDGE_MARKER_SIZE, trackingValues.getEdgeMarkerSize());  // NEU
             editor.putString(AppConstants.Prefs.KEY_MARKER_TYPE, trackingValues.getMarkerType().name());
             editor.putString(AppConstants.Prefs.KEY_EDGE_MARKER, trackingValues.getEdgeMarker().name());
             editor.putString(AppConstants.Prefs.KEY_SCROLL_MARKER, trackingValues.getScrollMarker().name());
 
-            boolean success = editor.commit(); // Synchron für besseres Error Handling
+            boolean success = editor.commit();
 
             if (success) {
-                Log.d(TAG, "Einstellungen erfolgreich gespeichert");
+                Log.d(TAG, "Einstellungen erfolgreich gespeichert (mit Edge-Marker-Größe)");
             } else {
                 Log.e(TAG, "Fehler beim Speichern der Einstellungen");
             }
@@ -230,7 +255,7 @@ public final class Utilities {
     }
 
     /**
-     * Verbesserte Settings-Ladung mit robustem Error Handling
+     * Verbesserte Settings-Ladung mit Edge-Marker-Größe
      */
     @NonNull
     public static TrackingValues loadSettings(@NonNull Context context) {
@@ -248,13 +273,15 @@ public final class Utilities {
                     prefs.getInt(AppConstants.Prefs.KEY_MARKER_DENSITY, 1));
             trackingValues.setMarkerSize(
                     prefs.getInt(AppConstants.Prefs.KEY_MARKER_SIZE, 1));
+            trackingValues.setEdgeMarkerSize(  // NEU
+                    prefs.getInt(AppConstants.Prefs.KEY_EDGE_MARKER_SIZE, 1));
 
             // Enum-Werte sicher wiederherstellen
             loadMarkerTypeEnum(prefs, trackingValues);
             loadEdgeMarkerEnum(prefs, trackingValues);
             loadScrollMarkerEnum(prefs, trackingValues);
 
-            Log.d(TAG, "Einstellungen erfolgreich geladen");
+            Log.d(TAG, "Einstellungen erfolgreich geladen (mit Edge-Marker-Größe)");
 
         } catch (Exception e) {
             Log.e(TAG, "Fehler beim Laden der Einstellungen, verwende Standardwerte", e);

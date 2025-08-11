@@ -23,6 +23,14 @@ public final class AppConstants {
         public static final int SIZE_4 = 70;
         public static final int SIZE_5 = 80;
         public static final int DEFAULT_SIZE = SIZE_1;
+
+        // Edge Marker Größen (separate Skalierung)
+        public static final int EDGE_SIZE_1 = 25;  // Original Größe
+        public static final int EDGE_SIZE_2 = 40;
+        public static final int EDGE_SIZE_3 = 60;
+        public static final int EDGE_SIZE_4 = 80;
+        public static final int EDGE_SIZE_5 = 100;
+        public static final int DEFAULT_EDGE_SIZE = EDGE_SIZE_1;
     }
 
     // ========== SCROLL SYSTEM ==========
@@ -33,9 +41,9 @@ public final class AppConstants {
         public static final int GENERATION_BUFFER = MARKER_SPACING * 4;
 
         // Momentum Scrolling
-        public static final float MOMENTUM_FRICTION = 0.85f;
-        public static final int MOMENTUM_DURATION = 2000;
-        public static final float MIN_VELOCITY = 50f;
+        public static final float MOMENTUM_FRICTION = 0.65f;  // -20% weniger Schwung
+        public static final int MOMENTUM_DURATION = 1200;     // -40% kürzere Dauer
+        public static final float MIN_VELOCITY = 100f;
 
         // Base Positions
         public static final float[] VERTICAL_BASE_X = {-0.25f, 0.25f};
@@ -54,6 +62,8 @@ public final class AppConstants {
         public static final String KEY_MARKER_SIZE = "markerSize";
         public static final String KEY_MARKER_TYPE = "markerType";
         public static final String KEY_EDGE_MARKER = "edgeMarker";
+        public static final String KEY_EDGE_MARKER_SIZE = "edgeMarkerSize";
+
         public static final String KEY_SCROLL_MARKER = "scrollMarker";
     }
 
@@ -90,6 +100,9 @@ public final class AppConstants {
 
         public static final int MIN_MARKER_SIZE = 1;
         public static final int MAX_MARKER_SIZE = 5;
+
+        public static final int MIN_EDGE_MARKER_SIZE = 1;
+        public static final int MAX_EDGE_MARKER_SIZE = 5;
     }
 
     // ========== URLS ==========

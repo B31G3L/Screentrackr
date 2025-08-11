@@ -235,6 +235,30 @@
                         android:popupBackground="@color/background" />
                 </LinearLayout>
 
+                <!-- NEU: Edge Marker Größe -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/value_edge_marker_size"
+                        android:textColor="@color/text_light"
+                        android:textSize="16sp" />
+
+                    <Spinner
+                        android:id="@+id/spinner_edge_marker_size"
+                        android:layout_width="120dp"
+                        android:layout_height="48dp"
+                        android:background="@drawable/spinner_background"
+                        android:popupBackground="@color/background" />
+                </LinearLayout>
+
                 <!-- Scroll-Marker -->
                 <LinearLayout
                     android:layout_width="match_parent"

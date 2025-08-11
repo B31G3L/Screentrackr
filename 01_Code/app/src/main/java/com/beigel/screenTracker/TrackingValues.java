@@ -126,6 +126,8 @@ public class TrackingValues implements Serializable {
     private String markerColor = AppConstants.DEFAULT_MARKER_COLOR;
     private int markerDensity = 1;
     private int markerSize = 1;
+    private int edgeMarkerSize = 1;
+
     private MarkerType markerType = MarkerType.CROSS;
     private EdgeMarkerType edgeMarker = EdgeMarkerType.NONE;
     private ScrollMarkerType scrollMarker = ScrollMarkerType.NONE;
@@ -147,6 +149,7 @@ public class TrackingValues implements Serializable {
         this.markerColor = other.markerColor;
         this.markerDensity = other.markerDensity;
         this.markerSize = other.markerSize;
+        this.edgeMarkerSize = other.edgeMarkerSize;
         this.markerType = other.markerType;
         this.edgeMarker = other.edgeMarker;
         this.scrollMarker = other.scrollMarker;
@@ -308,7 +311,35 @@ public class TrackingValues implements Serializable {
         if (colorCode == null) return false;
         return colorCode.matches(AppConstants.Validation.HEX_COLOR_PATTERN);
     }
+    public int getEdgeMarkerSize() {
+        return edgeMarkerSize;
+    }
 
+    public void setEdgeMarkerSize(int edgeMarkerSize) {
+        if (edgeMarkerSize >= AppConstants.Validation.MIN_EDGE_MARKER_SIZE &&
+                edgeMarkerSize <= AppConstants.Validation.MAX_EDGE_MARKER_SIZE) {
+            this.edgeMarkerSize = edgeMarkerSize;
+        }
+    }
+
+    // Überladene Methode für String-Eingabe
+    public void setEdgeMarkerSize(@Nullable String edgeMarkerSize) {
+        try {
+            setEdgeMarkerSize(Integer.parseInt(edgeMarkerSize));
+        } catch (NumberFormatException e) {
+            // Behalte den aktuellen Wert bei
+        }
+    }
+
+// ========== LEGACY METHODS (ERWEITERT) ==========
+
+    /**
+     * @deprecated Verwende {@link #getEdgeMarkerSize()} direkt
+     */
+    @Deprecated
+    public String getEdgeMarkerSizeAsString() {
+        return String.valueOf(edgeMarkerSize);
+    }
     /**
      * Prüft ob alle Einstellungen gültig sind
      */
@@ -319,6 +350,8 @@ public class TrackingValues implements Serializable {
                 markerDensity <= AppConstants.Validation.MAX_MARKER_DENSITY &&
                 markerSize >= AppConstants.Validation.MIN_MARKER_SIZE &&
                 markerSize <= AppConstants.Validation.MAX_MARKER_SIZE &&
+                edgeMarkerSize >= AppConstants.Validation.MIN_EDGE_MARKER_SIZE &&
+                edgeMarkerSize <= AppConstants.Validation.MAX_EDGE_MARKER_SIZE &&
                 markerType != null &&
                 edgeMarker != null &&
                 scrollMarker != null;
@@ -332,6 +365,7 @@ public class TrackingValues implements Serializable {
         markerColor = AppConstants.DEFAULT_MARKER_COLOR;
         markerDensity = 1;
         markerSize = 1;
+        edgeMarkerSize = 1;
         markerType = MarkerType.CROSS;
         edgeMarker = EdgeMarkerType.NONE;
         scrollMarker = ScrollMarkerType.NONE;
@@ -348,6 +382,7 @@ public class TrackingValues implements Serializable {
 
         if (markerDensity != that.markerDensity) return false;
         if (markerSize != that.markerSize) return false;
+        if (edgeMarkerSize != that.edgeMarkerSize) return false;
         if (!backgroundColor.equals(that.backgroundColor)) return false;
         if (!markerColor.equals(that.markerColor)) return false;
         if (markerType != that.markerType) return false;
@@ -361,6 +396,7 @@ public class TrackingValues implements Serializable {
         result = 31 * result + markerColor.hashCode();
         result = 31 * result + markerDensity;
         result = 31 * result + markerSize;
+        result = 31 * result + edgeMarkerSize;
         result = 31 * result + markerType.hashCode();
         result = 31 * result + edgeMarker.hashCode();
         result = 31 * result + scrollMarker.hashCode();
@@ -375,6 +411,7 @@ public class TrackingValues implements Serializable {
                 ", markerColor='" + markerColor + '\'' +
                 ", markerDensity=" + markerDensity +
                 ", markerSize=" + markerSize +
+                ", edgeMarkerSize=" + edgeMarkerSize +
                 ", markerType=" + markerType +
                 ", edgeMarker=" + edgeMarker +
                 ", scrollMarker=" + scrollMarker +

@@ -507,13 +507,13 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
 
             isMomentumScrolling = true;
 
-            float deceleration = 2000f;
+            float deceleration = 3500f;
             float totalDistance = (initialVelocity * initialVelocity) / (2 * deceleration);
             if (initialVelocity < 0) totalDistance = -totalDistance;
 
             momentumAnimator = ValueAnimator.ofFloat(0f, totalDistance);
             momentumAnimator.setDuration(AppConstants.Scrolling.MOMENTUM_DURATION);
-            momentumAnimator.setInterpolator(new DecelerateInterpolator(2.0f));
+            momentumAnimator.setInterpolator(new DecelerateInterpolator(3.0f));
 
             momentumAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                 private float lastValue = 0f;

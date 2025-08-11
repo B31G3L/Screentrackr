@@ -32,6 +32,7 @@ public class SettingsManager implements AdapterView.OnItemSelectedListener {
     private Button buttonMarkerColor;
     private Spinner spinnerMarkerDensity;
     private Spinner spinnerMarkerSize;
+    private Spinner spinnerEdgeMarkerSize;
     private Spinner spinnerMarkerType;
     private Spinner spinnerEdgeMarkers;
     private Spinner spinnerScrollMarkers;
@@ -61,7 +62,7 @@ public class SettingsManager implements AdapterView.OnItemSelectedListener {
     public void initializeViews(@NonNull View rootView) {
         buttonBackgroundColor = rootView.findViewById(R.id.buttonBackgroundColor);
         buttonMarkerColor = rootView.findViewById(R.id.buttonMarkerColor);
-
+        spinnerEdgeMarkerSize = rootView.findViewById(R.id.spinner_edge_marker_size);
         spinnerMarkerDensity = rootView.findViewById(R.id.spinner_marker_density);
         spinnerMarkerSize = rootView.findViewById(R.id.spinner_marker_size);
         spinnerMarkerType = rootView.findViewById(R.id.spinner_marker_type);
@@ -79,6 +80,7 @@ public class SettingsManager implements AdapterView.OnItemSelectedListener {
     private void setupSpinners() {
         setupSpinner(spinnerMarkerDensity, R.array.marker_density_array, trackingValues.getMarkerDensity());
         setupSpinner(spinnerMarkerSize, R.array.edge_size_array, trackingValues.getMarkerSize() - 1);
+        setupSpinner(spinnerEdgeMarkerSize, R.array.edge_size_array, trackingValues.getEdgeMarkerSize() - 1);
         setupSpinner(spinnerMarkerType, R.array.marker_type_array, getMarkerTypePosition());
         setupSpinner(spinnerEdgeMarkers, R.array.edge_markers_array, getEdgeMarkerPosition());
         setupSpinner(spinnerScrollMarkers, R.array.scroll_markers_array, getScrollMarkerPosition());
@@ -251,6 +253,8 @@ public class SettingsManager implements AdapterView.OnItemSelectedListener {
         try {
             if (parentId == R.id.spinner_edge_marker) {
                 settingsChanged = handleEdgeMarkerSelection(position);
+            } else if (parentId == R.id.spinner_edge_marker_size) {
+                settingsChanged = handleEdgeMarkerSizeSelection(parent, position);
             } else if (parentId == R.id.spinner_scroll_marker) {
                 settingsChanged = handleScrollMarkerSelection(position);
             } else if (parentId == R.id.spinner_marker_density) {
@@ -267,6 +271,16 @@ public class SettingsManager implements AdapterView.OnItemSelectedListener {
         } catch (Exception e) {
             Log.e(TAG, "Fehler bei Spinner-Auswahl", e);
         }
+    }
+
+    /**
+     * Behandelt Edge-Marker-Größe-Auswahl (NEU)
+     */
+    private boolean handleEdgeMarkerSizeSelection(@NonNull AdapterView<?> parent, int position) {
+        String selectedSize = parent.getItemAtPosition(position).toString();
+        trackingValues.setEdgeMarkerSize(selectedSize);
+        Log.d(TAG, "Edge-Marker-Größe geändert auf: " + selectedSize);
+        return true;
     }
 
     private boolean handleEdgeMarkerSelection(int position) {

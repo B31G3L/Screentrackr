@@ -10,6 +10,7 @@
     <string name="value_marker_size">Marker size</string>
     <string name="value_marker_type">Marker type</string>
     <string name="value_edge_marker">Edge markers</string>
+    <string name="value_edge_marker_size">Edge marker size</string>
     <string name="value_scroll_marker">Scroll markers</string>
 
     <!-- Color Picker -->
