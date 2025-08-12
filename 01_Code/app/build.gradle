@@ -10,8 +10,8 @@ android {
         applicationId "com.beigel.screenTracker"
         minSdk 27
         targetSdk 35
-        versionCode 6  // Erhöht für aufgeräumte Version
-        versionName "1.3.0"  // Neue Version für Refactoring
+        versionCode 7  // Erhöht für aufgeräumte Version
+        versionName "1.3.1"  // Neue Version für Refactoring
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 

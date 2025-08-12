@@ -153,9 +153,11 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
 
             // Nach Bildschirmgröße-Ermittlung: dynamische Marker initialisieren
             dynamicMarkerManager.initializeWithScreenSize(screenWidth, screenHeight);
+
+            // ✅ NEU: Scroll-Marker erst NACH der Bildschirmgröße-Ermittlung einrichten
+            dynamicMarkerManager.setupScrollMarkers();
         });
     }
-
     /**
      * Richtet das Tracking-System ein
      */
@@ -168,8 +170,6 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
             // Statische Marker erstellen
             staticMarkerManager.setupMarkers();
 
-            // Dynamische Marker-System initialisieren
-            dynamicMarkerManager.setupScrollMarkers();
 
             Log.d(TAG, "Tracking-System erfolgreich eingerichtet");
         } catch (Exception e) {
