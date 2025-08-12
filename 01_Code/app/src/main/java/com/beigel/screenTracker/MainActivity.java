@@ -82,7 +82,6 @@ public class MainActivity extends AppCompatActivity implements SettingsManager.S
         initializeUIReferences();
         setupSettingsUI();
         setupStartButton();
-        setupFooterLinks();
 
         Log.d(TAG, "UI-Setup abgeschlossen");
     }
@@ -113,17 +112,7 @@ public class MainActivity extends AppCompatActivity implements SettingsManager.S
         buttonStart.setOnClickListener(v -> startTracking());
     }
 
-    /**
-     * Initialisiert die Footer-Links
-     */
-    private void setupFooterLinks() {
-        try {
-            FooterLinkManager footerManager = new FooterLinkManager(this);
-            footerManager.initializeFooterLinks(findViewById(android.R.id.content));
-        } catch (Exception e) {
-            Log.w(TAG, "Footer-Links konnten nicht initialisiert werden", e);
-        }
-    }
+
 
     // ========== TRACKING START ==========
 
@@ -407,57 +396,5 @@ public class MainActivity extends AppCompatActivity implements SettingsManager.S
         }
     }
 
-    /**
-     * Verwaltet Footer-Links
-     * Separiert von Haupt-UI-Logic
-     */
-    private static class FooterLinkManager {
-        private final MainActivity activity;
 
-        public FooterLinkManager(@NonNull MainActivity activity) {
-            this.activity = activity;
-        }
-
-        public void initializeFooterLinks(@NonNull View rootView) {
-            TextView footerBeigelLink = rootView.findViewById(R.id.footer_beigel_link);
-            TextView footerOvermindLink = rootView.findViewById(R.id.footer_overmind_link);
-            TextView footerBrowserLink = rootView.findViewById(R.id.footer_browser_link);
-
-            if (footerBeigelLink != null) {
-                footerBeigelLink.setOnClickListener(v -> openWebLink(AppConstants.Urls.BEIGEL_STORE));
-            }
-
-            if (footerOvermindLink != null) {
-                footerOvermindLink.setOnClickListener(v -> openWebLink(AppConstants.Urls.OVERMIND_STUDIOS));
-            }
-
-            if (footerBrowserLink != null) {
-                footerBrowserLink.setOnClickListener(v -> openWebLink(AppConstants.Urls.BROWSER_VERSION));
-            }
-
-            Log.d(TAG, "Footer-Links initialisiert");
-        }
-
-        /**
-         * Öffnet einen Web-Link im Browser
-         */
-        private void openWebLink(@NonNull String url) {
-            try {
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                activity.startActivity(browserIntent);
-                Log.d(TAG, "Browser geöffnet für: " + url);
-            } catch (Exception e) {
-                Log.w(TAG, "Browser konnte nicht geöffnet werden für: " + url, e);
-
-                String message = "Browser nicht verfügbar";
-                try {
-                    message = activity.getString(R.string.browser_not_available);
-                } catch (Exception ex) {
-                    // Fallback verwenden
-                }
-
-                Toast.makeText(activity, message, Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
 }

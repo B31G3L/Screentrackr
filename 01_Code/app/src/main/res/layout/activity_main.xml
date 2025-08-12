@@ -72,7 +72,7 @@
                 android:orientation="vertical"
                 android:padding="20dp">
 
-                <!-- Überschrift mit String-Ressource -->
+                <!-- Überschrift -->
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -235,7 +235,7 @@
                         android:popupBackground="@color/background" />
                 </LinearLayout>
 
-                <!-- NEU: Edge Marker Größe -->
+                <!-- Edge Marker Größe -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -285,141 +285,21 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Start Button mit String-Ressource -->
+        <!-- Start Button - Jetzt ganz unten -->
         <Button
             android:id="@+id/button_start"
             android:layout_width="0dp"
             android:layout_height="56dp"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="24dp"
             android:backgroundTint="@color/primary"
             android:text="@string/button_text_start"
             android:textColor="@color/black"
             android:textSize="18sp"
             android:textStyle="bold"
             app:cornerRadius="12dp"
-            app:layout_constraintBottom_toTopOf="@+id/footer_card"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
-
-        <!-- Schöner Footer mit Card-Design -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/footer_card"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardBackgroundColor="#1A000000"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="2dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:strokeColor="#22FFFFFF"
-            app:strokeWidth="1dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <!-- Copyright Zeile -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="8dp">
-
-                    <!-- Copyright Icon -->
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="©"
-                        android:textColor="@color/primary"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:layout_marginEnd="4dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="2025"
-                        android:textColor="#CCFFFFFF"
-                        android:textSize="12sp"
-                        android:layout_marginEnd="8dp" />
-
-                    <TextView
-                        android:id="@+id/footer_beigel_link"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/footer_beigel"
-                        android:textColor="@color/primary"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:background="?android:attr/selectableItemBackground"
-                        android:padding="4dp" />
-                </LinearLayout>
-
-                <!-- Collaboration Zeile -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="8dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/footer_collaboration_text"
-                        android:textColor="#99FFFFFF"
-                        android:textSize="11sp"
-                        android:layout_marginEnd="4dp" />
-
-                    <TextView
-                        android:id="@+id/footer_overmind_link"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/footer_overmind"
-                        android:textColor="@color/primary"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:background="?android:attr/selectableItemBackground"
-                        android:padding="4dp" />
-                </LinearLayout>
-
-                <!-- Browser Link Zeile -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/footer_browser_text"
-                        android:textColor="#99FFFFFF"
-                        android:textSize="11sp"
-                        android:layout_marginEnd="4dp" />
-
-                    <TextView
-                        android:id="@+id/footer_browser_link"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/footer_browser_link"
-                        android:textColor="@color/primary"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:background="?android:attr/selectableItemBackground"
-                        android:padding="4dp" />
-                </LinearLayout>
-
-
-
-
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+            app:layout_constraintStart_toStartOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
