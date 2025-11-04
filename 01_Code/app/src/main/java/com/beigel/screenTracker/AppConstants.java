@@ -40,10 +40,11 @@ public final class AppConstants {
         public static final int CLEANUP_DISTANCE = MARKER_SPACING * 6;
         public static final int GENERATION_BUFFER = MARKER_SPACING * 4;
 
-        // Momentum Scrolling
-        public static final float MOMENTUM_FRICTION = 0.65f;  // -20% weniger Schwung
-        public static final int MOMENTUM_DURATION = 1200;     // -40% kürzere Dauer
-        public static final float MIN_VELOCITY = 100f;
+        // Momentum Scrolling - ANGEPASST FÜR LANGSAMERES SCROLLEN
+        public static final float DECELERATION = 12000f;       // Höher = langsamer (war 3500f im Code)
+        public static final int MOMENTUM_DURATION = 2500;     // Längere Dauer = langsameres Scrollen (war 1200ms)
+        public static final float MIN_VELOCITY = 200f;        // Höhere Mindestgeschwindigkeit (war 100f)
+        public static final float INTERPOLATOR_FACTOR = 3.0f; // DecelerateInterpolator Faktor
 
         // Base Positions
         public static final float[] VERTICAL_BASE_X = {-0.25f, 0.25f};

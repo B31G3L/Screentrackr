@@ -1,42 +1,50 @@
 package com.beigel.screenTracker;
 
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import android.widget.ImageView;
 
 import java.util.ArrayList;
 
 /**
- * Aufgeräumte MainActivity mit verbesserter Architektur
- * - SettingsManager für UI-Logic
- * - AppConstants für alle Konstanten
- * - Besseres Error Handling
- * - Reduzierte Komplexität
- * - Proper Logging
+ * MainActivity mit Google Play In-App Review Integration
+ * - Review erscheint NUR auf dem Hauptscreen
+ * - Review erscheint NIEMALS während des Trackings
+ * - Intelligentes Timing für Bewertungsaufforderungen
  */
 public class MainActivity extends AppCompatActivity implements SettingsManager.SettingsListener {
 
     private static final String TAG = AppConstants.LogTags.MAIN;
 
+    // ========== TESTING-KONFIGURATION ==========
+    // Setze auf true um Review SOFORT beim Start zu sehen (für Testing)
+    // Setze auf false für normale Produktions-Logik (nach 3 Starts + 2 Tagen)
+    private static final boolean TESTING_MODE = true;
+    // ===========================================
+
     // Core Components
     private SettingsManager settingsManager;
     private TrackingValues trackingValues;
     private PreviewManager previewManager;
+    private InAppReviewManager reviewManager;
 
     // UI References
     private Button buttonStart;
     private ConstraintLayout previewTrackingBackground;
     private ConstraintLayout previewScrollMarkerLayer;
+
+    // NEU: Flag um zu tracken ob wir auf dem Hauptscreen sind
+    private boolean isOnMainScreen = false;
+    private boolean hasShownReviewThisSession = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +58,9 @@ public class MainActivity extends AppCompatActivity implements SettingsManager.S
             setupUI();
             updatePreview();
 
+            // NEU: In-App Review initialisieren (aber noch nicht anzeigen!)
+            initializeInAppReview();
+
             Log.d(TAG, "MainActivity erfolgreich initialisiert");
         } catch (Exception e) {
             Log.e(TAG, "Fehler bei MainActivity Initialisierung", e);
@@ -59,25 +70,37 @@ public class MainActivity extends AppCompatActivity implements SettingsManager.S
 
     // ========== INITIALIZATION ==========
 
-    /**
-     * Initialisiert die App-Komponenten
-     */
     private void initializeApp() {
-        // TrackingValues laden oder mit Standardwerten initialisieren
         trackingValues = Utilities.loadSettings(this);
-
-        // Settings Manager initialisieren
         settingsManager = new SettingsManager(this, trackingValues, this);
-
-        // Preview Manager initialisieren
         previewManager = new PreviewManager(this, trackingValues);
 
         Log.d(TAG, "App-Komponenten initialisiert");
     }
 
     /**
-     * Initialisiert alle UI-Komponenten
+     * NEU: Initialisiert den In-App Review Manager
+     * Review wird NICHT sofort angezeigt, sondern erst in onResume wenn auf Hauptscreen
      */
+    private void initializeInAppReview() {
+        reviewManager = new InAppReviewManager(this);
+
+        if (TESTING_MODE) {
+            // Testing-Setup (Bedingungen simulieren)
+            Log.d(TAG, "⚠️ TESTING-MODUS aktiviert");
+            reviewManager.resetForTesting();
+            reviewManager.simulateLaunches(5);
+            reviewManager.simulateDaysAgo(7);
+            reviewManager.printDebugInfo();
+        } else {
+            // Produktions-Modus: App-Launch registrieren
+            reviewManager.onAppLaunched();
+            reviewManager.printDebugInfo();
+        }
+
+        Log.d(TAG, "In-App Review Manager initialisiert (Review wird später in onResume gezeigt)");
+    }
+
     private void setupUI() {
         initializeUIReferences();
         setupSettingsUI();
@@ -86,53 +109,43 @@ public class MainActivity extends AppCompatActivity implements SettingsManager.S
         Log.d(TAG, "UI-Setup abgeschlossen");
     }
 
-    /**
-     * Initialisiert UI-Referenzen
-     */
     private void initializeUIReferences() {
         buttonStart = findViewById(R.id.button_start);
         previewTrackingBackground = findViewById(R.id.trackingBackground);
         previewScrollMarkerLayer = findViewById(R.id.scrollMarkerLayer);
 
-        // Preview Manager mit UI-Referenzen versorgen
         previewManager.setPreviewViews(previewTrackingBackground, previewScrollMarkerLayer);
     }
 
-    /**
-     * Initialisiert Settings UI über SettingsManager
-     */
     private void setupSettingsUI() {
         settingsManager.initializeViews(findViewById(android.R.id.content));
     }
 
-    /**
-     * Konfiguriert den Start-Button
-     */
     private void setupStartButton() {
         buttonStart.setOnClickListener(v -> startTracking());
     }
 
-
-
     // ========== TRACKING START ==========
 
     /**
-     * Startet das Tracking mit verbessertem Error Handling
+     * Startet das Tracking
+     * WICHTIG: Markiert dass wir den Hauptscreen verlassen
      */
     private void startTracking() {
         try {
-            // Einstellungen speichern
             Utilities.saveSettings(this, trackingValues);
-
-            // Erfolg anzeigen
             showMessage(getString(R.string.settings_saved), false);
+
+            // NEU: Markiere dass wir NICHT mehr auf dem Hauptscreen sind
+            isOnMainScreen = false;
+            Log.d(TAG, "Verlasse Hauptscreen - Review wird nicht mehr angezeigt");
 
             // Tracking-Screen starten
             Intent intent = new Intent(MainActivity.this, Trackingscreen.class);
             intent.putExtra("trackingValues", trackingValues);
             startActivity(intent);
 
-            Log.d(TAG, "Tracking gestartet mit Einstellungen: " + trackingValues.toString());
+            Log.d(TAG, "Tracking gestartet");
 
         } catch (Exception e) {
             Log.e(TAG, "Fehler beim Starten des Trackings", e);
@@ -160,15 +173,12 @@ public class MainActivity extends AppCompatActivity implements SettingsManager.S
             return getString(resId);
         } catch (Exception e) {
             Log.w(TAG, "String-Ressource nicht gefunden: " + resId, e);
-            return "N/A"; // Fallback
+            return "N/A";
         }
     }
 
     // ========== PREVIEW MANAGEMENT ==========
 
-    /**
-     * Aktualisiert die Vorschau
-     */
     private void updatePreview() {
         try {
             previewManager.updatePreview();
@@ -185,9 +195,64 @@ public class MainActivity extends AppCompatActivity implements SettingsManager.S
         try {
             updatePreview();
             settingsManager.updateUI();
-            Log.d(TAG, "MainActivity onResume - UI aktualisiert");
+
+            // NEU: Wir sind wieder auf dem Hauptscreen
+            isOnMainScreen = true;
+            Log.d(TAG, "MainActivity onResume - zurück auf Hauptscreen");
+
+            // NEU: Review nur anzeigen wenn:
+            // 1. Wir auf dem Hauptscreen sind
+            // 2. Noch nicht diese Session gezeigt wurde
+            // 3. Bedingungen erfüllt sind
+            showReviewIfAppropriate();
+
         } catch (Exception e) {
             Log.e(TAG, "Fehler in onResume", e);
+        }
+    }
+
+    /**
+     * NEU: Zeigt Review nur wenn alle Bedingungen erfüllt sind
+     * Wird in onResume aufgerufen (nur auf Hauptscreen)
+     */
+    private void showReviewIfAppropriate() {
+        // Prüfung 1: Sind wir auf dem Hauptscreen?
+        if (!isOnMainScreen) {
+            Log.d(TAG, "Nicht auf Hauptscreen - kein Review");
+            return;
+        }
+
+        // Prüfung 2: Wurde Review bereits diese Session gezeigt?
+        if (hasShownReviewThisSession) {
+            Log.d(TAG, "Review bereits diese Session gezeigt");
+            return;
+        }
+
+        // Prüfung 3: Sind die Review-Bedingungen erfüllt?
+        if (!reviewManager.shouldShowReviewPrompt()) {
+            Log.d(TAG, "Review-Bedingungen nicht erfüllt");
+            return;
+        }
+
+        // Alle Prüfungen bestanden - zeige Review nach kurzer Verzögerung
+        if (TESTING_MODE) {
+            // Testing: 3 Sekunden Verzögerung
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                if (isOnMainScreen) { // Nochmal prüfen ob noch auf Hauptscreen
+                    Log.d(TAG, "Zeige Review-Prompt jetzt (TESTING)...");
+                    reviewManager.showReviewPromptNow();
+                    hasShownReviewThisSession = true;
+                }
+            }, 3000);
+        } else {
+            // Produktion: 2 Sekunden Verzögerung für bessere UX
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                if (isOnMainScreen) { // Nochmal prüfen ob noch auf Hauptscreen
+                    Log.d(TAG, "Zeige Review-Prompt jetzt...");
+                    reviewManager.showReviewPromptNow();
+                    hasShownReviewThisSession = true;
+                }
+            }, 2000);
         }
     }
 
@@ -195,19 +260,35 @@ public class MainActivity extends AppCompatActivity implements SettingsManager.S
     protected void onPause() {
         super.onPause();
         try {
-            // Einstellungen bei Pause speichern
+            // NEU: Wir verlassen den Hauptscreen
+            isOnMainScreen = false;
+            Log.d(TAG, "MainActivity onPause - verlasse Hauptscreen");
+
+            // Einstellungen speichern
             Utilities.saveSettings(this, trackingValues);
-            Log.d(TAG, "Einstellungen bei onPause gespeichert");
+            Log.d(TAG, "Einstellungen gespeichert");
         } catch (Exception e) {
             Log.w(TAG, "Fehler beim Speichern in onPause", e);
         }
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        // Explizit markieren dass wir nicht mehr auf dem Hauptscreen sind
+        isOnMainScreen = false;
+        Log.d(TAG, "MainActivity onStop");
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        isOnMainScreen = false;
+        Log.d(TAG, "MainActivity onDestroy");
+    }
+
     // ========== UTILITY METHODS ==========
 
-    /**
-     * Zeigt eine Toast-Nachricht
-     */
     private void showMessage(@NonNull String message, boolean isError) {
         try {
             Toast.makeText(this, message, isError ? Toast.LENGTH_LONG : Toast.LENGTH_SHORT).show();
@@ -222,20 +303,13 @@ public class MainActivity extends AppCompatActivity implements SettingsManager.S
         }
     }
 
-    /**
-     * Zeigt Fehler und beendet Activity bei kritischen Fehlern
-     */
     private void showErrorAndFinish() {
         showMessage("Kritischer Fehler beim App-Start", true);
         finish();
     }
 
-    // ========== INNER CLASSES ==========
+    // ========== PREVIEW MANAGER (INNER CLASS) ==========
 
-    /**
-     * Verwaltet die Vorschau-Funktionalität
-     * Reduziert Komplexität der MainActivity
-     */
     private static class PreviewManager {
         private final MainActivity activity;
         private final TrackingValues trackingValues;
@@ -258,9 +332,6 @@ public class MainActivity extends AppCompatActivity implements SettingsManager.S
             this.previewScrollLayer = scrollLayer;
         }
 
-        /**
-         * Initialisiert die Marker-Listen für die Vorschau
-         */
         private void initializeMarkerLists() {
             trackingPointList1 = new ArrayList<>();
             trackingPointList2 = new ArrayList<>();
@@ -299,9 +370,6 @@ public class MainActivity extends AppCompatActivity implements SettingsManager.S
             }
         }
 
-        /**
-         * Aktualisiert die komplette Vorschau
-         */
         public void updatePreview() {
             try {
                 cleanPreview();
@@ -316,9 +384,6 @@ public class MainActivity extends AppCompatActivity implements SettingsManager.S
             }
         }
 
-        /**
-         * Setzt die Hintergrundfarbe
-         */
         private void setBackgroundColor() {
             if (previewBackground != null) {
                 int bgColor = Utilities.parseColorSafely(trackingValues.getBackgroundColor());
@@ -326,9 +391,6 @@ public class MainActivity extends AppCompatActivity implements SettingsManager.S
             }
         }
 
-        /**
-         * Erstellt statische Marker basierend auf Dichte
-         */
         private void createStaticMarkers() {
             int density = trackingValues.getMarkerDensity();
 
@@ -353,9 +415,6 @@ public class MainActivity extends AppCompatActivity implements SettingsManager.S
             }
         }
 
-        /**
-         * Erstellt Eckmarker falls aktiviert
-         */
         private void createEdgeMarkers() {
             if (trackingValues.getEdgeMarker() != TrackingValues.EdgeMarkerType.NONE) {
                 Utilities.createEdgeMarker(trackingPointListE, trackingValues);
@@ -363,19 +422,12 @@ public class MainActivity extends AppCompatActivity implements SettingsManager.S
             }
         }
 
-        /**
-         * Verwaltet Scroll-Marker (in Vorschau ausgeblendet)
-         */
         private void handleScrollMarkers() {
             if (previewScrollLayer != null) {
-                // Scroll-Layer in Vorschau immer ausblenden
-                previewScrollLayer.setVisibility(View.GONE);
+                previewScrollLayer.setVisibility(android.view.View.GONE);
             }
         }
 
-        /**
-         * Räumt die Vorschau auf
-         */
         private void cleanPreview() {
             clearMarkerGroup(trackingPointList1);
             clearMarkerGroup(trackingPointList2);
@@ -383,9 +435,6 @@ public class MainActivity extends AppCompatActivity implements SettingsManager.S
             clearMarkerGroup(trackingPointListE);
         }
 
-        /**
-         * Räumt eine Marker-Gruppe auf
-         */
         private void clearMarkerGroup(@NonNull ArrayList<ImageView> markerGroup) {
             for (ImageView marker : markerGroup) {
                 if (marker != null) {
@@ -395,6 +444,4 @@ public class MainActivity extends AppCompatActivity implements SettingsManager.S
             }
         }
     }
-
-
 }
