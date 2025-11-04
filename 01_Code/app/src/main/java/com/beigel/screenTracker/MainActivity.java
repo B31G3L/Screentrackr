@@ -16,10 +16,10 @@ import android.widget.ImageView;
 import java.util.ArrayList;
 
 /**
- * MainActivity mit Google Play In-App Review Integration
- * - Review erscheint NUR auf dem Hauptscreen
- * - Review erscheint NIEMALS während des Trackings
- * - Intelligentes Timing für Bewertungsaufforderungen
+ * MainActivity mit optimierter In-App Review Integration
+ * - Review nach erfolgreichem Tracking (positive Erfahrung!)
+ * - Review nur auf Hauptscreen, nie während Tracking
+ * - Aggressiveres Timing für mehr Bewertungen
  */
 public class MainActivity extends AppCompatActivity implements SettingsManager.SettingsListener {
 
@@ -27,8 +27,8 @@ public class MainActivity extends AppCompatActivity implements SettingsManager.S
 
     // ========== TESTING-KONFIGURATION ==========
     // Setze auf true um Review SOFORT beim Start zu sehen (für Testing)
-    // Setze auf false für normale Produktions-Logik (nach 3 Starts + 2 Tagen)
-    private static final boolean TESTING_MODE = true;
+    // Setze auf false für normale Produktions-Logik
+    private static final boolean TESTING_MODE = false;  // ← AUF FALSE FÜR PRODUKTION
     // ===========================================
 
     // Core Components
@@ -42,9 +42,10 @@ public class MainActivity extends AppCompatActivity implements SettingsManager.S
     private ConstraintLayout previewTrackingBackground;
     private ConstraintLayout previewScrollMarkerLayer;
 
-    // NEU: Flag um zu tracken ob wir auf dem Hauptscreen sind
+    // Review-Tracking
     private boolean isOnMainScreen = false;
     private boolean hasShownReviewThisSession = false;
+    private boolean justReturnedFromTracking = false;  // NEU: Tracking gerade beendet?
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,8 +58,6 @@ public class MainActivity extends AppCompatActivity implements SettingsManager.S
             initializeApp();
             setupUI();
             updatePreview();
-
-            // NEU: In-App Review initialisieren (aber noch nicht anzeigen!)
             initializeInAppReview();
 
             Log.d(TAG, "MainActivity erfolgreich initialisiert");
@@ -79,14 +78,13 @@ public class MainActivity extends AppCompatActivity implements SettingsManager.S
     }
 
     /**
-     * NEU: Initialisiert den In-App Review Manager
-     * Review wird NICHT sofort angezeigt, sondern erst in onResume wenn auf Hauptscreen
+     * Initialisiert den In-App Review Manager
      */
     private void initializeInAppReview() {
         reviewManager = new InAppReviewManager(this);
 
         if (TESTING_MODE) {
-            // Testing-Setup (Bedingungen simulieren)
+            // Testing-Setup
             Log.d(TAG, "⚠️ TESTING-MODUS aktiviert");
             reviewManager.resetForTesting();
             reviewManager.simulateLaunches(5);
@@ -98,7 +96,7 @@ public class MainActivity extends AppCompatActivity implements SettingsManager.S
             reviewManager.printDebugInfo();
         }
 
-        Log.d(TAG, "In-App Review Manager initialisiert (Review wird später in onResume gezeigt)");
+        Log.d(TAG, "In-App Review Manager initialisiert");
     }
 
     private void setupUI() {
@@ -129,16 +127,16 @@ public class MainActivity extends AppCompatActivity implements SettingsManager.S
 
     /**
      * Startet das Tracking
-     * WICHTIG: Markiert dass wir den Hauptscreen verlassen
      */
     private void startTracking() {
         try {
             Utilities.saveSettings(this, trackingValues);
             showMessage(getString(R.string.settings_saved), false);
 
-            // NEU: Markiere dass wir NICHT mehr auf dem Hauptscreen sind
+            // Markiere dass wir NICHT mehr auf dem Hauptscreen sind
             isOnMainScreen = false;
-            Log.d(TAG, "Verlasse Hauptscreen - Review wird nicht mehr angezeigt");
+            justReturnedFromTracking = false;  // Reset
+            Log.d(TAG, "Verlasse Hauptscreen - starte Tracking");
 
             // Tracking-Screen starten
             Intent intent = new Intent(MainActivity.this, Trackingscreen.class);
@@ -158,13 +156,11 @@ public class MainActivity extends AppCompatActivity implements SettingsManager.S
     @Override
     public void onSettingsChanged() {
         updatePreview();
-        Log.d(TAG, "Einstellungen geändert, Preview aktualisiert");
     }
 
     @Override
     public void onColorChanged() {
         updatePreview();
-        Log.d(TAG, "Farben geändert, Preview aktualisiert");
     }
 
     @Override
@@ -196,14 +192,20 @@ public class MainActivity extends AppCompatActivity implements SettingsManager.S
             updatePreview();
             settingsManager.updateUI();
 
-            // NEU: Wir sind wieder auf dem Hauptscreen
+            // Wir sind wieder auf dem Hauptscreen
+            boolean wasOnMainScreen = isOnMainScreen;
             isOnMainScreen = true;
-            Log.d(TAG, "MainActivity onResume - zurück auf Hauptscreen");
 
-            // NEU: Review nur anzeigen wenn:
-            // 1. Wir auf dem Hauptscreen sind
-            // 2. Noch nicht diese Session gezeigt wurde
-            // 3. Bedingungen erfüllt sind
+            // NEU: Prüfe ob wir gerade vom Tracking zurückkommen
+            if (!wasOnMainScreen) {
+                // Wir kommen von einer anderen Activity zurück (vermutlich Trackingscreen)
+                justReturnedFromTracking = true;
+                Log.d(TAG, "MainActivity onResume - zurück vom Tracking!");
+            } else {
+                Log.d(TAG, "MainActivity onResume - bereits auf Hauptscreen");
+            }
+
+            // Review anzeigen wenn passend
             showReviewIfAppropriate();
 
         } catch (Exception e) {
@@ -212,8 +214,9 @@ public class MainActivity extends AppCompatActivity implements SettingsManager.S
     }
 
     /**
-     * NEU: Zeigt Review nur wenn alle Bedingungen erfüllt sind
-     * Wird in onResume aufgerufen (nur auf Hauptscreen)
+     * OPTIMIERT: Zeigt Review zur richtigen Zeit
+     * - Beim App-Start (wenn Bedingungen erfüllt)
+     * - Nach Tracking-Ende (bessere Conversion!) 🌟
      */
     private void showReviewIfAppropriate() {
         // Prüfung 1: Sind wir auf dem Hauptscreen?
@@ -234,48 +237,47 @@ public class MainActivity extends AppCompatActivity implements SettingsManager.S
             return;
         }
 
-        // Alle Prüfungen bestanden - zeige Review nach kurzer Verzögerung
-        if (TESTING_MODE) {
-            // Testing: 3 Sekunden Verzögerung
-            new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                if (isOnMainScreen) { // Nochmal prüfen ob noch auf Hauptscreen
-                    Log.d(TAG, "Zeige Review-Prompt jetzt (TESTING)...");
-                    reviewManager.showReviewPromptNow();
-                    hasShownReviewThisSession = true;
-                }
-            }, 3000);
+        // NEU: Kürzere Verzögerung wenn von Tracking zurückgekommen
+        int delayMillis;
+        if (justReturnedFromTracking) {
+            // Gerade vom Tracking zurück - zeige Review schneller!
+            delayMillis = TESTING_MODE ? 2000 : 1500;  // 1.5 Sekunden (Nutzer hatte positive Erfahrung!)
+            Log.d(TAG, "Review nach Tracking-Ende (positive Erfahrung!) - Verzögerung: " + delayMillis + "ms");
         } else {
-            // Produktion: 2 Sekunden Verzögerung für bessere UX
-            new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                if (isOnMainScreen) { // Nochmal prüfen ob noch auf Hauptscreen
-                    Log.d(TAG, "Zeige Review-Prompt jetzt...");
-                    reviewManager.showReviewPromptNow();
-                    hasShownReviewThisSession = true;
-                }
-            }, 2000);
+            // Normaler App-Start
+            delayMillis = TESTING_MODE ? 3000 : 2500;  // 2.5 Sekunden
+            Log.d(TAG, "Review beim App-Start - Verzögerung: " + delayMillis + "ms");
         }
+
+        // Review mit entsprechender Verzögerung anzeigen
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            if (isOnMainScreen) { // Nochmal prüfen ob noch auf Hauptscreen
+                Log.d(TAG, "Zeige Review-Prompt jetzt...");
+                reviewManager.showReviewPromptNow();
+                hasShownReviewThisSession = true;
+                justReturnedFromTracking = false;  // Reset
+            }
+        }, delayMillis);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         try {
-            // NEU: Wir verlassen den Hauptscreen
+            // Wir verlassen den Hauptscreen
             isOnMainScreen = false;
-            Log.d(TAG, "MainActivity onPause - verlasse Hauptscreen");
+            Log.d(TAG, "MainActivity onPause");
 
             // Einstellungen speichern
             Utilities.saveSettings(this, trackingValues);
-            Log.d(TAG, "Einstellungen gespeichert");
         } catch (Exception e) {
-            Log.w(TAG, "Fehler beim Speichern in onPause", e);
+            Log.w(TAG, "Fehler in onPause", e);
         }
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        // Explizit markieren dass wir nicht mehr auf dem Hauptscreen sind
         isOnMainScreen = false;
         Log.d(TAG, "MainActivity onStop");
     }
@@ -377,8 +379,6 @@ public class MainActivity extends AppCompatActivity implements SettingsManager.S
                 createStaticMarkers();
                 createEdgeMarkers();
                 handleScrollMarkers();
-
-                Log.d(TAG, "Vorschau erfolgreich aktualisiert");
             } catch (Exception e) {
                 Log.e(TAG, "Fehler beim Aktualisieren der Vorschau", e);
             }
@@ -396,7 +396,6 @@ public class MainActivity extends AppCompatActivity implements SettingsManager.S
 
             switch (density) {
                 case 0:
-                    Log.d(TAG, "Keine Marker (Dichte 0)");
                     break;
                 case 1:
                     Utilities.createMarker(trackingPointList1, trackingValues);
@@ -410,15 +409,12 @@ public class MainActivity extends AppCompatActivity implements SettingsManager.S
                     Utilities.createMarker(trackingPointList2, trackingValues);
                     Utilities.createMarker(trackingPointList3, trackingValues);
                     break;
-                default:
-                    Log.w(TAG, "Ungültige Marker-Dichte: " + density);
             }
         }
 
         private void createEdgeMarkers() {
             if (trackingValues.getEdgeMarker() != TrackingValues.EdgeMarkerType.NONE) {
                 Utilities.createEdgeMarker(trackingPointListE, trackingValues);
-                Log.d(TAG, "Eckmarker erstellt: " + trackingValues.getEdgeMarker());
             }
         }
 

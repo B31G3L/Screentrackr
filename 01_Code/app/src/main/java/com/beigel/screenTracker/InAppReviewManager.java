@@ -11,12 +11,13 @@ import com.google.android.play.core.review.ReviewInfo;
 import com.google.android.play.core.review.ReviewManager;
 import com.google.android.play.core.review.ReviewManagerFactory;
 import com.google.android.gms.tasks.Task;
+
 /**
- * Moderner In-App Review Manager mit Google Play In-App Review API
- * - Zeigt natives Google Play Bewertungs-Popup INNERHALB der App
- * - Kein Verlassen der App notwendig
- * - Intelligentes Timing basierend auf Nutzungsverhalten
- * - Respektiert Google Play Kontingente
+ * OPTIMIERTER In-App Review Manager
+ * - Aggressiveres Timing für mehr Bewertungen
+ * - Nach 2 App-Starts statt 3
+ * - Nach 1 Tag statt 2
+ * - Zeigt Review nach positiver Erfahrung (Tracking-Ende)
  */
 public class InAppReviewManager {
 
@@ -30,10 +31,12 @@ public class InAppReviewManager {
     private static final String KEY_REVIEW_COMPLETED = "review_completed";
     private static final String KEY_NEVER_SHOW = "never_show_again";
 
-    // Konfiguration - Wann soll die Bewertung erscheinen?
-    private static final int MIN_LAUNCHES_UNTIL_PROMPT = 3;      // Nach 3 App-Starts
-    private static final long MIN_DAYS_UNTIL_PROMPT = 2;         // Nach 2 Tagen
+    // ========== OPTIMIERTE KONFIGURATION ==========
+    // AGGRESSIVER für mehr Bewertungen! 🚀
+    private static final int MIN_LAUNCHES_UNTIL_PROMPT = 2;      // Nach 2 App-Starts (war 3)
+    private static final long MIN_DAYS_UNTIL_PROMPT = 1;         // Nach 1 Tag (war 2)
     private static final long MIN_DAYS_BETWEEN_PROMPTS = 90;     // 90 Tage zwischen Aufforderungen
+    // =============================================
 
     private final Context context;
     private final SharedPreferences prefs;
@@ -47,24 +50,22 @@ public class InAppReviewManager {
 
     /**
      * Wird bei jedem App-Start aufgerufen
-     * Prüft automatisch, ob die Bewertungsaufforderung gezeigt werden soll
      */
     public void onAppLaunched() {
-        // Launch Count erhöhen
-        incrementLaunchCount();
+        if (prefs.getBoolean(KEY_NEVER_SHOW, false) ||
+                prefs.getBoolean(KEY_REVIEW_COMPLETED, false)) {
+            return;
+        }
 
-        // Ersten Launch-Zeitpunkt speichern
+        incrementLaunchCount();
         ensureFirstLaunchTimeSet();
 
-        // Prüfen ob Bedingungen erfüllt sind und Review anzeigen
-        if (shouldShowReviewPrompt()) {
-            requestReview();
-        }
+        Log.d(TAG, "App-Launch registriert");
     }
 
     /**
-     * Zeigt die Bewertungsaufforderung SOFORT (für Testing oder nach spezifischen Events)
-     * Ignoriert normale Timing-Bedingungen
+     * Zeigt die Bewertungsaufforderung sofort
+     * Wird von MainActivity aufgerufen (nur auf Hauptscreen!)
      */
     public void showReviewPromptNow() {
         if (prefs.getBoolean(KEY_NEVER_SHOW, false)) {
@@ -72,12 +73,13 @@ public class InAppReviewManager {
             return;
         }
 
-        Log.d(TAG, "Manueller Review-Request");
+        Log.d(TAG, "Zeige Review-Prompt jetzt");
         requestReview();
     }
 
     /**
-     * Prüft ob alle Bedingungen für die Bewertungsaufforderung erfüllt sind
+     * Prüft ob Review angezeigt werden sollte
+     * ÖFFENTLICH - wird von MainActivity verwendet
      */
     public boolean shouldShowReviewPrompt() {
         // Nie mehr anzeigen?
@@ -92,14 +94,14 @@ public class InAppReviewManager {
             return false;
         }
 
-        // Genug App-Starts?
+        // Genug App-Starts? (OPTIMIERT: nur 2 statt 3)
         long launchCount = prefs.getLong(KEY_LAUNCH_COUNT, 0);
         if (launchCount < MIN_LAUNCHES_UNTIL_PROMPT) {
             Log.d(TAG, String.format("Nicht genug Launches: %d/%d", launchCount, MIN_LAUNCHES_UNTIL_PROMPT));
             return false;
         }
 
-        // Genug Tage seit erstem Start?
+        // Genug Tage seit erstem Start? (OPTIMIERT: nur 1 Tag statt 2)
         long firstLaunch = prefs.getLong(KEY_FIRST_LAUNCH, 0);
         long daysSinceFirstLaunch = (System.currentTimeMillis() - firstLaunch) / (1000 * 60 * 60 * 24);
         if (daysSinceFirstLaunch < MIN_DAYS_UNTIL_PROMPT) {
@@ -118,7 +120,7 @@ public class InAppReviewManager {
             }
         }
 
-        Log.d(TAG, "Alle Bedingungen erfüllt - zeige Review");
+        Log.d(TAG, "✅ Alle Bedingungen erfüllt - sollte Review zeigen");
         return true;
     }
 
@@ -131,27 +133,24 @@ public class InAppReviewManager {
             return;
         }
 
-        Activity activity = (Activity) context;
+        final Activity activity = (Activity) context;
 
         // Review-Flow vorbereiten
         Task<ReviewInfo> reviewInfoTask = reviewManager.requestReviewFlow();
 
-        reviewInfoTask.addOnCompleteListener(task -> {
+        reviewInfoTask.addOnCompleteListener(activity, task -> {
             if (task.isSuccessful()) {
-                // ReviewInfo erhalten - starte den Review-Flow
                 ReviewInfo reviewInfo = task.getResult();
 
                 Task<Void> reviewFlowTask = reviewManager.launchReviewFlow(activity, reviewInfo);
 
-                reviewFlowTask.addOnCompleteListener(flowTask -> {
-                    // Review-Flow wurde angezeigt (egal ob Nutzer bewertet hat oder nicht)
+                reviewFlowTask.addOnCompleteListener(activity, flowTask -> {
                     onReviewFlowCompleted(flowTask.isSuccessful());
                 });
 
                 Log.d(TAG, "In-App Review Flow gestartet");
 
             } else {
-                // Fehler beim Anfordern der ReviewInfo
                 Log.w(TAG, "Review-Request fehlgeschlagen", task.getException());
                 onReviewFlowCompleted(false);
             }
@@ -168,14 +167,14 @@ public class InAppReviewManager {
      */
     private void onReviewFlowCompleted(boolean successful) {
         if (successful) {
-            Log.d(TAG, "Review-Flow erfolgreich abgeschlossen");
+            Log.d(TAG, "✅ Review-Flow erfolgreich abgeschlossen");
 
-            // Als abgeschlossen markieren (verhindert erneute Aufforderungen)
+            // Als abgeschlossen markieren
             prefs.edit()
                     .putBoolean(KEY_REVIEW_COMPLETED, true)
                     .apply();
         } else {
-            Log.d(TAG, "Review-Flow wurde abgebrochen oder fehlgeschlagen");
+            Log.d(TAG, "❌ Review-Flow abgebrochen oder fehlgeschlagen");
         }
     }
 
@@ -213,7 +212,7 @@ public class InAppReviewManager {
                 .remove(KEY_REVIEW_COMPLETED)
                 .remove(KEY_NEVER_SHOW)
                 .apply();
-        Log.d(TAG, "Review-Tracking zurückgesetzt");
+        Log.d(TAG, "🔄 Review-Tracking zurückgesetzt");
     }
 
     /**
@@ -232,12 +231,12 @@ public class InAppReviewManager {
                 (System.currentTimeMillis() - lastRequest) / (1000 * 60 * 60 * 24) : 0;
 
         Log.d(TAG, "========== In-App Review Debug Info ==========");
-        Log.d(TAG, "Launch Count: " + launchCount + " (Min: " + MIN_LAUNCHES_UNTIL_PROMPT + ")");
-        Log.d(TAG, "Days since first launch: " + daysSinceFirstLaunch + " (Min: " + MIN_DAYS_UNTIL_PROMPT + ")");
-        Log.d(TAG, "Days since last request: " + daysSinceLastRequest + " (Min: " + MIN_DAYS_BETWEEN_PROMPTS + ")");
-        Log.d(TAG, "Review completed: " + completed);
-        Log.d(TAG, "Never show again: " + neverShow);
-        Log.d(TAG, "Should show prompt: " + shouldShowReviewPrompt());
+        Log.d(TAG, "📊 Launch Count: " + launchCount + " (Min: " + MIN_LAUNCHES_UNTIL_PROMPT + ") " + (launchCount >= MIN_LAUNCHES_UNTIL_PROMPT ? "✅" : "❌"));
+        Log.d(TAG, "📅 Days since first launch: " + daysSinceFirstLaunch + " (Min: " + MIN_DAYS_UNTIL_PROMPT + ") " + (daysSinceFirstLaunch >= MIN_DAYS_UNTIL_PROMPT ? "✅" : "❌"));
+        Log.d(TAG, "⏰ Days since last request: " + daysSinceLastRequest + " (Min: " + MIN_DAYS_BETWEEN_PROMPTS + ")");
+        Log.d(TAG, "✔️ Review completed: " + completed);
+        Log.d(TAG, "🚫 Never show again: " + neverShow);
+        Log.d(TAG, "🎯 Should show prompt: " + shouldShowReviewPrompt());
         Log.d(TAG, "=============================================");
     }
 
@@ -248,7 +247,7 @@ public class InAppReviewManager {
         for (int i = 0; i < count; i++) {
             incrementLaunchCount();
         }
-        Log.d(TAG, "Simuliert " + count + " App-Starts");
+        Log.d(TAG, "🎮 Simuliert " + count + " App-Starts");
         printDebugInfo();
     }
 
@@ -260,7 +259,7 @@ public class InAppReviewManager {
         prefs.edit()
                 .putLong(KEY_FIRST_LAUNCH, simulatedFirstLaunch)
                 .apply();
-        Log.d(TAG, "Erster Launch simuliert vor " + days + " Tagen");
+        Log.d(TAG, "📆 Erster Launch simuliert vor " + days + " Tagen");
         printDebugInfo();
     }
 }
