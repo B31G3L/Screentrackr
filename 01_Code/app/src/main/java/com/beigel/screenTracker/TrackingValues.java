@@ -11,9 +11,10 @@ import java.io.Serializable;
  * - Bessere Validierung
  * - toString für Debugging
  * - Immutable Enums
+ * - Separate Scroll-Marker Konfiguration
  */
 public class TrackingValues implements Serializable {
-    private static final long serialVersionUID = 1L; // Kompatibel mit Original
+    private static final long serialVersionUID = 2L; // Erhöht wegen neuer Felder
 
     /**
      * Verfügbare Marker-Typen
@@ -132,6 +133,10 @@ public class TrackingValues implements Serializable {
     private EdgeMarkerType edgeMarker = EdgeMarkerType.NONE;
     private ScrollMarkerType scrollMarker = ScrollMarkerType.NONE;
 
+    // NEU: Separate Scroll-Marker Einstellungen
+    private boolean useCustomScrollMarker = false;
+    private MarkerType scrollMarkerType = MarkerType.CROSS;
+
     // ========== CONSTRUCTORS ==========
 
     /**
@@ -153,6 +158,8 @@ public class TrackingValues implements Serializable {
         this.markerType = other.markerType;
         this.edgeMarker = other.edgeMarker;
         this.scrollMarker = other.scrollMarker;
+        this.useCustomScrollMarker = other.useCustomScrollMarker;
+        this.scrollMarkerType = other.scrollMarkerType;
     }
 
     // ========== GETTERS AND SETTERS WITH VALIDATION ==========
@@ -260,6 +267,57 @@ public class TrackingValues implements Serializable {
         this.scrollMarker = ScrollMarkerType.fromString(scrollMarker);
     }
 
+    public int getEdgeMarkerSize() {
+        return edgeMarkerSize;
+    }
+
+    public void setEdgeMarkerSize(int edgeMarkerSize) {
+        if (edgeMarkerSize >= AppConstants.Validation.MIN_EDGE_MARKER_SIZE &&
+                edgeMarkerSize <= AppConstants.Validation.MAX_EDGE_MARKER_SIZE) {
+            this.edgeMarkerSize = edgeMarkerSize;
+        }
+    }
+
+    // Überladene Methode für String-Eingabe
+    public void setEdgeMarkerSize(@Nullable String edgeMarkerSize) {
+        try {
+            setEdgeMarkerSize(Integer.parseInt(edgeMarkerSize));
+        } catch (NumberFormatException e) {
+            // Behalte den aktuellen Wert bei
+        }
+    }
+
+    // ========== NEU: SEPARATE SCROLL-MARKER GETTERS/SETTERS ==========
+
+    public boolean isUseCustomScrollMarker() {
+        return useCustomScrollMarker;
+    }
+
+    public void setUseCustomScrollMarker(boolean useCustomScrollMarker) {
+        this.useCustomScrollMarker = useCustomScrollMarker;
+    }
+
+    public MarkerType getScrollMarkerType() {
+        return scrollMarkerType;
+    }
+
+    public void setScrollMarkerType(@Nullable MarkerType scrollMarkerType) {
+        this.scrollMarkerType = scrollMarkerType != null ? scrollMarkerType : MarkerType.CROSS;
+    }
+
+    // Überladene Methode für String-Eingabe
+    public void setScrollMarkerType(@Nullable String scrollMarkerType) {
+        this.scrollMarkerType = MarkerType.fromString(scrollMarkerType);
+    }
+
+    /**
+     * Gibt den effektiv zu verwendenden Marker-Typ für Scroll-Marker zurück
+     * @return scrollMarkerType wenn useCustomScrollMarker=true, sonst markerType
+     */
+    public MarkerType getEffectiveScrollMarkerType() {
+        return useCustomScrollMarker ? scrollMarkerType : markerType;
+    }
+
     // ========== LEGACY METHODS FOR COMPATIBILITY ==========
 
     /**
@@ -302,6 +360,14 @@ public class TrackingValues implements Serializable {
         return scrollMarker.toString();
     }
 
+    /**
+     * @deprecated Verwende {@link #getEdgeMarkerSize()} direkt
+     */
+    @Deprecated
+    public String getEdgeMarkerSizeAsString() {
+        return String.valueOf(edgeMarkerSize);
+    }
+
     // ========== VALIDATION METHODS ==========
 
     /**
@@ -311,35 +377,7 @@ public class TrackingValues implements Serializable {
         if (colorCode == null) return false;
         return colorCode.matches(AppConstants.Validation.HEX_COLOR_PATTERN);
     }
-    public int getEdgeMarkerSize() {
-        return edgeMarkerSize;
-    }
 
-    public void setEdgeMarkerSize(int edgeMarkerSize) {
-        if (edgeMarkerSize >= AppConstants.Validation.MIN_EDGE_MARKER_SIZE &&
-                edgeMarkerSize <= AppConstants.Validation.MAX_EDGE_MARKER_SIZE) {
-            this.edgeMarkerSize = edgeMarkerSize;
-        }
-    }
-
-    // Überladene Methode für String-Eingabe
-    public void setEdgeMarkerSize(@Nullable String edgeMarkerSize) {
-        try {
-            setEdgeMarkerSize(Integer.parseInt(edgeMarkerSize));
-        } catch (NumberFormatException e) {
-            // Behalte den aktuellen Wert bei
-        }
-    }
-
-// ========== LEGACY METHODS (ERWEITERT) ==========
-
-    /**
-     * @deprecated Verwende {@link #getEdgeMarkerSize()} direkt
-     */
-    @Deprecated
-    public String getEdgeMarkerSizeAsString() {
-        return String.valueOf(edgeMarkerSize);
-    }
     /**
      * Prüft ob alle Einstellungen gültig sind
      */
@@ -354,7 +392,8 @@ public class TrackingValues implements Serializable {
                 edgeMarkerSize <= AppConstants.Validation.MAX_EDGE_MARKER_SIZE &&
                 markerType != null &&
                 edgeMarker != null &&
-                scrollMarker != null;
+                scrollMarker != null &&
+                scrollMarkerType != null;
     }
 
     /**
@@ -369,6 +408,8 @@ public class TrackingValues implements Serializable {
         markerType = MarkerType.CROSS;
         edgeMarker = EdgeMarkerType.NONE;
         scrollMarker = ScrollMarkerType.NONE;
+        useCustomScrollMarker = false;
+        scrollMarkerType = MarkerType.CROSS;
     }
 
     // ========== OBJECT METHODS ==========
@@ -383,11 +424,13 @@ public class TrackingValues implements Serializable {
         if (markerDensity != that.markerDensity) return false;
         if (markerSize != that.markerSize) return false;
         if (edgeMarkerSize != that.edgeMarkerSize) return false;
+        if (useCustomScrollMarker != that.useCustomScrollMarker) return false;
         if (!backgroundColor.equals(that.backgroundColor)) return false;
         if (!markerColor.equals(that.markerColor)) return false;
         if (markerType != that.markerType) return false;
         if (edgeMarker != that.edgeMarker) return false;
-        return scrollMarker == that.scrollMarker;
+        if (scrollMarker != that.scrollMarker) return false;
+        return scrollMarkerType == that.scrollMarkerType;
     }
 
     @Override
@@ -400,6 +443,8 @@ public class TrackingValues implements Serializable {
         result = 31 * result + markerType.hashCode();
         result = 31 * result + edgeMarker.hashCode();
         result = 31 * result + scrollMarker.hashCode();
+        result = 31 * result + (useCustomScrollMarker ? 1 : 0);
+        result = 31 * result + scrollMarkerType.hashCode();
         return result;
     }
 
@@ -415,6 +460,8 @@ public class TrackingValues implements Serializable {
                 ", markerType=" + markerType +
                 ", edgeMarker=" + edgeMarker +
                 ", scrollMarker=" + scrollMarker +
+                ", useCustomScrollMarker=" + useCustomScrollMarker +
+                ", scrollMarkerType=" + scrollMarkerType +
                 ", isValid=" + isValid() +
                 '}';
     }

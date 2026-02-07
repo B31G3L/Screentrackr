@@ -7,6 +7,8 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
 
 import androidx.annotation.NonNull;
@@ -18,6 +20,7 @@ import com.skydoves.colorpickerview.listeners.ColorEnvelopeListener;
 /**
  * Verwaltet alle Settings-bezogenen UI-Operationen
  * Entlastet die MainActivity von komplexer UI-Logik
+ * NEU: Unterstützt separate Scroll-Marker-Typen
  */
 public class SettingsManager implements AdapterView.OnItemSelectedListener {
 
@@ -36,6 +39,11 @@ public class SettingsManager implements AdapterView.OnItemSelectedListener {
     private Spinner spinnerMarkerType;
     private Spinner spinnerEdgeMarkers;
     private Spinner spinnerScrollMarkers;
+
+    // NEU: Separate Scroll-Marker UI
+    private CheckBox checkboxCustomScrollMarker;
+    private LinearLayout layoutScrollMarkerType;
+    private Spinner spinnerScrollMarkerType;
 
     /**
      * Interface für Callbacks an die MainActivity
@@ -69,8 +77,14 @@ public class SettingsManager implements AdapterView.OnItemSelectedListener {
         spinnerEdgeMarkers = rootView.findViewById(R.id.spinner_edge_marker);
         spinnerScrollMarkers = rootView.findViewById(R.id.spinner_scroll_marker);
 
+        // NEU: Scroll-Marker UI-Elemente
+        checkboxCustomScrollMarker = rootView.findViewById(R.id.checkbox_custom_scroll_marker);
+        layoutScrollMarkerType = rootView.findViewById(R.id.layout_scroll_marker_type);
+        spinnerScrollMarkerType = rootView.findViewById(R.id.spinner_scroll_marker_type);
+
         setupSpinners();
         setupColorButtons();
+        setupCustomScrollMarkerUI();
         updateUI();
     }
 
@@ -84,6 +98,9 @@ public class SettingsManager implements AdapterView.OnItemSelectedListener {
         setupSpinner(spinnerMarkerType, R.array.marker_type_array, getMarkerTypePosition());
         setupSpinner(spinnerEdgeMarkers, R.array.edge_markers_array, getEdgeMarkerPosition());
         setupSpinner(spinnerScrollMarkers, R.array.scroll_markers_array, getScrollMarkerPosition());
+
+        // NEU: Scroll-Marker-Typ Spinner
+        setupSpinner(spinnerScrollMarkerType, R.array.marker_type_array, getScrollMarkerTypePosition());
     }
 
     /**
@@ -106,10 +123,67 @@ public class SettingsManager implements AdapterView.OnItemSelectedListener {
         buttonMarkerColor.setOnClickListener(this::showMarkerColorDialog);
     }
 
+    /**
+     * NEU: Konfiguriert die Custom Scroll-Marker UI
+     */
+    private void setupCustomScrollMarkerUI() {
+        // Checkbox Listener
+        checkboxCustomScrollMarker.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            trackingValues.setUseCustomScrollMarker(isChecked);
+            updateScrollMarkerTypeVisibility(isChecked);
+            listener.onSettingsChanged();
+            Log.d(TAG, "Custom Scroll-Marker: " + isChecked);
+        });
+
+        // Initial-Zustand setzen
+        checkboxCustomScrollMarker.setChecked(trackingValues.isUseCustomScrollMarker());
+        updateCustomScrollMarkerVisibility();
+    }
+
+    /**
+     * NEU: Zeigt/Versteckt die gesamte Custom Scroll-Marker Sektion
+     * Nur sichtbar wenn Scroll-Marker aktiviert sind (nicht NONE)
+     */
+    private void updateCustomScrollMarkerVisibility() {
+        boolean scrollMarkersEnabled = trackingValues.getScrollMarker() != TrackingValues.ScrollMarkerType.NONE;
+
+        if (checkboxCustomScrollMarker != null) {
+            checkboxCustomScrollMarker.setVisibility(scrollMarkersEnabled ? View.VISIBLE : View.GONE);
+        }
+
+        // Spinner nur sichtbar wenn Checkbox aktiviert UND Scroll-Marker aktiviert
+        if (layoutScrollMarkerType != null) {
+            boolean showSpinner = scrollMarkersEnabled && trackingValues.isUseCustomScrollMarker();
+            layoutScrollMarkerType.setVisibility(showSpinner ? View.VISIBLE : View.GONE);
+        }
+    }
+
+    /**
+     * NEU: Zeigt/Versteckt den Scroll-Marker-Typ Spinner
+     */
+    private void updateScrollMarkerTypeVisibility(boolean visible) {
+        if (layoutScrollMarkerType != null) {
+            layoutScrollMarkerType.setVisibility(visible ? View.VISIBLE : View.GONE);
+        }
+    }
+
     // ========== POSITION MAPPING ==========
 
     private int getMarkerTypePosition() {
         switch (trackingValues.getMarkerType()) {
+            case PIE: return 0;
+            case CIRCLE: return 1;
+            case TRIANGLE: return 2;
+            case CROSS:
+            default: return 3;
+        }
+    }
+
+    /**
+     * NEU: Position für Scroll-Marker-Typ
+     */
+    private int getScrollMarkerTypePosition() {
+        switch (trackingValues.getScrollMarkerType()) {
             case PIE: return 0;
             case CIRCLE: return 1;
             case TRIANGLE: return 2;
@@ -263,6 +337,9 @@ public class SettingsManager implements AdapterView.OnItemSelectedListener {
                 settingsChanged = handleMarkerSizeSelection(parent, position);
             } else if (parentId == R.id.spinner_marker_type) {
                 settingsChanged = handleMarkerTypeSelection(position);
+            } else if (parentId == R.id.spinner_scroll_marker_type) {
+                // NEU: Scroll-Marker-Typ Handling
+                settingsChanged = handleScrollMarkerTypeSelection(position);
             }
 
             if (settingsChanged) {
@@ -274,7 +351,7 @@ public class SettingsManager implements AdapterView.OnItemSelectedListener {
     }
 
     /**
-     * Behandelt Edge-Marker-Größe-Auswahl (NEU)
+     * Behandelt Edge-Marker-Größe-Auswahl
      */
     private boolean handleEdgeMarkerSizeSelection(@NonNull AdapterView<?> parent, int position) {
         String selectedSize = parent.getItemAtPosition(position).toString();
@@ -302,6 +379,10 @@ public class SettingsManager implements AdapterView.OnItemSelectedListener {
             case 2: selectedScroll = TrackingValues.ScrollMarkerType.HORIZONTAL; break;
         }
         trackingValues.setScrollMarker(selectedScroll);
+
+        // NEU: Checkbox Sichtbarkeit aktualisieren wenn Scroll-Marker geändert werden
+        updateCustomScrollMarkerVisibility();
+
         return true;
     }
 
@@ -329,6 +410,22 @@ public class SettingsManager implements AdapterView.OnItemSelectedListener {
         return true;
     }
 
+    /**
+     * NEU: Behandelt Scroll-Marker-Typ-Auswahl
+     */
+    private boolean handleScrollMarkerTypeSelection(int position) {
+        TrackingValues.MarkerType selectedType = TrackingValues.MarkerType.CROSS;
+        switch (position) {
+            case 0: selectedType = TrackingValues.MarkerType.PIE; break;
+            case 1: selectedType = TrackingValues.MarkerType.CIRCLE; break;
+            case 2: selectedType = TrackingValues.MarkerType.TRIANGLE; break;
+            case 3: selectedType = TrackingValues.MarkerType.CROSS; break;
+        }
+        trackingValues.setScrollMarkerType(selectedType);
+        Log.d(TAG, "Scroll-Marker-Typ geändert auf: " + selectedType);
+        return true;
+    }
+
     @Override
     public void onNothingSelected(AdapterView<?> parent) {
         // Interface-Methode, aber nicht benötigt
@@ -341,7 +438,7 @@ public class SettingsManager implements AdapterView.OnItemSelectedListener {
      */
     public void updateUI() {
         updateColorButtons();
-        // Weitere UI-Updates hier
+        updateCustomScrollMarkerVisibility();
     }
 
     /**

@@ -12,6 +12,8 @@
     <string name="value_edge_marker">Edge markers</string>
     <string name="value_edge_marker_size">Edge marker size</string>
     <string name="value_scroll_marker">Scroll markers</string>
+    <string name="value_custom_scroll_marker">Custom scroll marker type</string>
+    <string name="value_scroll_marker_type">Scroll marker type</string>
 
     <!-- Color Picker -->
     <string name="color_picker_background_title">Background Color</string>

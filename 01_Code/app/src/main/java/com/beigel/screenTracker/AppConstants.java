@@ -64,8 +64,11 @@ public final class AppConstants {
         public static final String KEY_MARKER_TYPE = "markerType";
         public static final String KEY_EDGE_MARKER = "edgeMarker";
         public static final String KEY_EDGE_MARKER_SIZE = "edgeMarkerSize";
-
         public static final String KEY_SCROLL_MARKER = "scrollMarker";
+
+        // NEU: Separate Scroll-Marker Einstellungen
+        public static final String KEY_USE_CUSTOM_SCROLL_MARKER = "useCustomScrollMarker";
+        public static final String KEY_SCROLL_MARKER_TYPE = "scrollMarkerType";
     }
 
     // ========== UI CONSTANTS ==========

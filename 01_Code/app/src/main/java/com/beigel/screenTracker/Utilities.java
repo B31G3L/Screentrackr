@@ -225,7 +225,7 @@ public final class Utilities {
     // ========== SETTINGS PERSISTENCE ==========
 
     /**
-     * Verbesserte Settings-Speicherung mit Edge-Marker-Größe
+     * Verbesserte Settings-Speicherung mit Edge-Marker-Größe und separatem Scroll-Marker-Typ
      */
     public static void saveSettings(@NonNull Context context, @NonNull TrackingValues trackingValues) {
         try {
@@ -236,15 +236,19 @@ public final class Utilities {
             editor.putString(AppConstants.Prefs.KEY_MARKER_COLOR, trackingValues.getMarkerColor());
             editor.putInt(AppConstants.Prefs.KEY_MARKER_DENSITY, trackingValues.getMarkerDensity());
             editor.putInt(AppConstants.Prefs.KEY_MARKER_SIZE, trackingValues.getMarkerSize());
-            editor.putInt(AppConstants.Prefs.KEY_EDGE_MARKER_SIZE, trackingValues.getEdgeMarkerSize());  // NEU
+            editor.putInt(AppConstants.Prefs.KEY_EDGE_MARKER_SIZE, trackingValues.getEdgeMarkerSize());
             editor.putString(AppConstants.Prefs.KEY_MARKER_TYPE, trackingValues.getMarkerType().name());
             editor.putString(AppConstants.Prefs.KEY_EDGE_MARKER, trackingValues.getEdgeMarker().name());
             editor.putString(AppConstants.Prefs.KEY_SCROLL_MARKER, trackingValues.getScrollMarker().name());
 
+            // NEU: Separate Scroll-Marker Einstellungen
+            editor.putBoolean(AppConstants.Prefs.KEY_USE_CUSTOM_SCROLL_MARKER, trackingValues.isUseCustomScrollMarker());
+            editor.putString(AppConstants.Prefs.KEY_SCROLL_MARKER_TYPE, trackingValues.getScrollMarkerType().name());
+
             boolean success = editor.commit();
 
             if (success) {
-                Log.d(TAG, "Einstellungen erfolgreich gespeichert (mit Edge-Marker-Größe)");
+                Log.d(TAG, "Einstellungen erfolgreich gespeichert (mit separatem Scroll-Marker-Typ)");
             } else {
                 Log.e(TAG, "Fehler beim Speichern der Einstellungen");
             }
@@ -255,7 +259,7 @@ public final class Utilities {
     }
 
     /**
-     * Verbesserte Settings-Ladung mit Edge-Marker-Größe
+     * Verbesserte Settings-Ladung mit Edge-Marker-Größe und separatem Scroll-Marker-Typ
      */
     @NonNull
     public static TrackingValues loadSettings(@NonNull Context context) {
@@ -273,7 +277,7 @@ public final class Utilities {
                     prefs.getInt(AppConstants.Prefs.KEY_MARKER_DENSITY, 1));
             trackingValues.setMarkerSize(
                     prefs.getInt(AppConstants.Prefs.KEY_MARKER_SIZE, 1));
-            trackingValues.setEdgeMarkerSize(  // NEU
+            trackingValues.setEdgeMarkerSize(
                     prefs.getInt(AppConstants.Prefs.KEY_EDGE_MARKER_SIZE, 1));
 
             // Enum-Werte sicher wiederherstellen
@@ -281,7 +285,12 @@ public final class Utilities {
             loadEdgeMarkerEnum(prefs, trackingValues);
             loadScrollMarkerEnum(prefs, trackingValues);
 
-            Log.d(TAG, "Einstellungen erfolgreich geladen (mit Edge-Marker-Größe)");
+            // NEU: Separate Scroll-Marker Einstellungen laden
+            trackingValues.setUseCustomScrollMarker(
+                    prefs.getBoolean(AppConstants.Prefs.KEY_USE_CUSTOM_SCROLL_MARKER, false));
+            loadScrollMarkerTypeEnum(prefs, trackingValues);
+
+            Log.d(TAG, "Einstellungen erfolgreich geladen (mit separatem Scroll-Marker-Typ)");
 
         } catch (Exception e) {
             Log.e(TAG, "Fehler beim Laden der Einstellungen, verwende Standardwerte", e);
@@ -323,6 +332,17 @@ public final class Utilities {
         } catch (IllegalArgumentException e) {
             Log.w(TAG, "Ungültiger ScrollMarkerType-Wert, verwende Standard: " + TrackingValues.ScrollMarkerType.NONE);
             trackingValues.setScrollMarker(TrackingValues.ScrollMarkerType.NONE);
+        }
+    }
+
+    private static void loadScrollMarkerTypeEnum(SharedPreferences prefs, TrackingValues trackingValues) {
+        try {
+            String value = prefs.getString(AppConstants.Prefs.KEY_SCROLL_MARKER_TYPE, TrackingValues.MarkerType.CROSS.name());
+            TrackingValues.MarkerType enumValue = TrackingValues.MarkerType.valueOf(value);
+            trackingValues.setScrollMarkerType(enumValue);
+        } catch (IllegalArgumentException e) {
+            Log.w(TAG, "Ungültiger ScrollMarkerType-Wert, verwende Standard: " + TrackingValues.MarkerType.CROSS);
+            trackingValues.setScrollMarkerType(TrackingValues.MarkerType.CROSS);
         }
     }
 

@@ -591,7 +591,7 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
 
             ImageView marker = new ImageView(scrollMarkerLayer.getContext());
 
-            int markerType = Utilities.getMarkerDrawable(trackingValues.getMarkerType());
+            int markerType = Utilities.getMarkerDrawable(trackingValues.getEffectiveScrollMarkerType());
             int markerSize = Utilities.getMarkerSizeInPixels(trackingValues.getMarkerSize());
             int markerColor = Utilities.parseColorSafely(trackingValues.getMarkerColor());
 

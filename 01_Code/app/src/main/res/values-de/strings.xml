@@ -12,6 +12,8 @@
     <string name="value_edge_marker">Eckmarker</string>
     <string name="value_edge_marker_size">Eckmarker-Größe</string>
     <string name="value_scroll_marker">Scroll-Marker</string>
+    <string name="value_custom_scroll_marker">Separater Scroll-Marker-Typ</string>
+    <string name="value_scroll_marker_type">Scroll-Marker-Typ</string>
 
     <!-- Color Picker -->
     <string name="color_picker_background_title">Hintergrundfarbe</string>
