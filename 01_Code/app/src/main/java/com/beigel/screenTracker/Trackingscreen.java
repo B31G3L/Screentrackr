@@ -419,26 +419,46 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
         }
 
         /**
-         * Erstellt initiale Scroll-Marker
+         * Erstellt initiale Scroll-Marker - NEU: Generiert Marker für sichtbaren Bereich
          */
         private void createInitialScrollMarkers(@NonNull TrackingValues.ScrollMarkerType scrollType) {
             switch (scrollType) {
                 case VERTICAL:
+                    // Für vertikale Scroll-Marker: Mehrere Marker entlang Y-Achse
                     for (int i = 0; i < 2; i++) {
-                        float worldX = AppConstants.Scrolling.VERTICAL_BASE_X[i] * screenWidth;
-                        float worldY = AppConstants.Scrolling.VERTICAL_BASE_Y[i] * screenHeight;
-                        createDynamicMarker(worldX, worldY, i);
+                        float baseX = AppConstants.Scrolling.VERTICAL_BASE_X[i] * screenWidth;
+
+                        // Generiere Marker oberhalb, im Zentrum und unterhalb des sichtbaren Bereichs
+                        int markerCount = 5; // Anzahl der Marker pro Spalte
+                        int halfCount = markerCount / 2;
+
+                        for (int j = -halfCount; j <= halfCount; j++) {
+                            float worldY = j * AppConstants.Scrolling.MARKER_SPACING;
+                            createDynamicMarker(baseX, worldY, i);
+                        }
                     }
                     break;
+
                 case HORIZONTAL:
+                    // Für horizontale Scroll-Marker: Mehrere Marker entlang X-Achse
                     for (int i = 0; i < 2; i++) {
-                        float worldX = AppConstants.Scrolling.HORIZONTAL_BASE_X[i] * screenWidth;
-                        float worldY = AppConstants.Scrolling.HORIZONTAL_BASE_Y[i] * screenHeight;
-                        createDynamicMarker(worldX, worldY, i);
+                        float baseY = AppConstants.Scrolling.HORIZONTAL_BASE_Y[i] * screenHeight;
+
+                        // Generiere Marker links, im Zentrum und rechts vom sichtbaren Bereich
+                        int markerCount = 5; // Anzahl der Marker pro Reihe
+                        int halfCount = markerCount / 2;
+
+                        for (int j = -halfCount; j <= halfCount; j++) {
+                            float worldX = j * AppConstants.Scrolling.MARKER_SPACING;
+                            createDynamicMarker(worldX, baseY, i);
+                        }
                     }
                     break;
             }
         }
+
+
+
 
         /**
          * Behandelt Scroll-Gesten
