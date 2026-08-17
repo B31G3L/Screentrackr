@@ -131,7 +131,6 @@ public class MainActivity extends AppCompatActivity implements SettingsManager.S
     private void startTracking() {
         try {
             Utilities.saveSettings(this, trackingValues);
-            showMessage(getString(R.string.settings_saved), false);
 
             // Markiere dass wir NICHT mehr auf dem Hauptscreen sind
             isOnMainScreen = false;
