@@ -191,9 +191,7 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
 
     @Override
     public boolean onSingleTapUp(@NonNull MotionEvent e) {
-        // Tap beendet das Tracking
-        Log.d(TAG, "Single Tap erkannt - beende Tracking");
-        finish();
+        // Einzelner Tap macht nichts mehr - Beenden erfolgt jetzt per 3-Finger-Geste
         return true;
     }
 
@@ -232,6 +230,14 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        // 3-Finger-Tap erkennen: sobald ein dritter Finger den Screen berührt, Tracking beenden
+        if (event.getActionMasked() == MotionEvent.ACTION_POINTER_DOWN
+                && event.getPointerCount() >= AppConstants.Gestures.EXIT_FINGER_COUNT) {
+            Log.d(TAG, "3-Finger-Geste erkannt - beende Tracking");
+            finish();
+            return true;
+        }
+
         return gestureDetector.onTouchEvent(event) || super.onTouchEvent(event);
     }
 

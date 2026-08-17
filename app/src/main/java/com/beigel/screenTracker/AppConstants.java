@@ -109,6 +109,12 @@ public final class AppConstants {
         public static final int MAX_EDGE_MARKER_SIZE = 5;
     }
 
+    // ========== GESTURES ==========
+    public static final class Gestures {
+        // Anzahl gleichzeitiger Finger-Berührungen, um den Tracking-Screen zu verlassen
+        public static final int EXIT_FINGER_COUNT = 3;
+    }
+
     // ========== URLS ==========
     public static final class Urls {
         public static final String BEIGEL_STORE = "https://play.google.com/store/apps/developer?id=Beigel";
