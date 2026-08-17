@@ -1,0 +1,60 @@
+From 16aa88c17e52ab267249d0a96d0b0db6630b0eba Mon Sep 17 00:00:00 2001
+From: Claude <claude@example.com>
+Date: Mon, 17 Aug 2026 20:32:05 +0000
+Subject: [PATCH] Trackingscreen: 3-Finger-Tap zum Beenden statt Single-Tap
+
+---
+ .../java/com/beigel/screenTracker/AppConstants.java  |  6 ++++++
+ .../com/beigel/screenTracker/Trackingscreen.java     | 12 +++++++++---
+ 2 files changed, 15 insertions(+), 3 deletions(-)
+
+diff --git a/app/src/main/java/com/beigel/screenTracker/AppConstants.java b/app/src/main/java/com/beigel/screenTracker/AppConstants.java
+index 9ef9d93..9aabe79 100644
+--- a/app/src/main/java/com/beigel/screenTracker/AppConstants.java
++++ b/app/src/main/java/com/beigel/screenTracker/AppConstants.java
+@@ -109,6 +109,12 @@ public final class AppConstants {
+         public static final int MAX_EDGE_MARKER_SIZE = 5;
+     }
+ 
++    // ========== GESTURES ==========
++    public static final class Gestures {
++        // Anzahl gleichzeitiger Finger-Berührungen, um den Tracking-Screen zu verlassen
++        public static final int EXIT_FINGER_COUNT = 3;
++    }
++
+     // ========== URLS ==========
+     public static final class Urls {
+         public static final String BEIGEL_STORE = "https://play.google.com/store/apps/developer?id=Beigel";
+diff --git a/app/src/main/java/com/beigel/screenTracker/Trackingscreen.java b/app/src/main/java/com/beigel/screenTracker/Trackingscreen.java
+index c65e71e..cca1003 100644
+--- a/app/src/main/java/com/beigel/screenTracker/Trackingscreen.java
++++ b/app/src/main/java/com/beigel/screenTracker/Trackingscreen.java
+@@ -191,9 +191,7 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
+ 
+     @Override
+     public boolean onSingleTapUp(@NonNull MotionEvent e) {
+-        // Tap beendet das Tracking
+-        Log.d(TAG, "Single Tap erkannt - beende Tracking");
+-        finish();
++        // Einzelner Tap macht nichts mehr - Beenden erfolgt jetzt per 3-Finger-Geste
+         return true;
+     }
+ 
+@@ -232,6 +230,14 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
+ 
+     @Override
+     public boolean onTouchEvent(MotionEvent event) {
++        // 3-Finger-Tap erkennen: sobald ein dritter Finger den Screen berührt, Tracking beenden
++        if (event.getActionMasked() == MotionEvent.ACTION_POINTER_DOWN
++                && event.getPointerCount() >= AppConstants.Gestures.EXIT_FINGER_COUNT) {
++            Log.d(TAG, "3-Finger-Geste erkannt - beende Tracking");
++            finish();
++            return true;
++        }
++
+         return gestureDetector.onTouchEvent(event) || super.onTouchEvent(event);
+     }
+ 
+-- 
+2.43.0
+

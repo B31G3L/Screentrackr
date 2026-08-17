@@ -1,0 +1,25 @@
+From 7ab3d7ac78c893ae6f73d332ee623c1195743e77 Mon Sep 17 00:00:00 2001
+From: Claude <claude@example.com>
+Date: Mon, 17 Aug 2026 20:39:09 +0000
+Subject: [PATCH 3/3] MainActivity: Toast 'Einstellungen gespeichert' beim
+ Tracking-Start entfernen
+
+---
+ app/src/main/java/com/beigel/screenTracker/MainActivity.java | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/app/src/main/java/com/beigel/screenTracker/MainActivity.java b/app/src/main/java/com/beigel/screenTracker/MainActivity.java
+index c7f8d08..451defb 100644
+--- a/app/src/main/java/com/beigel/screenTracker/MainActivity.java
++++ b/app/src/main/java/com/beigel/screenTracker/MainActivity.java
+@@ -131,7 +131,6 @@ public class MainActivity extends AppCompatActivity implements SettingsManager.S
+     private void startTracking() {
+         try {
+             Utilities.saveSettings(this, trackingValues);
+-            showMessage(getString(R.string.settings_saved), false);
+ 
+             // Markiere dass wir NICHT mehr auf dem Hauptscreen sind
+             isOnMainScreen = false;
+-- 
+2.43.0
+

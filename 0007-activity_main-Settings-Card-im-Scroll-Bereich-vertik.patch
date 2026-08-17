@@ -1,0 +1,48 @@
+From ead640166dd98fc65e36c7c37e072ac5726df010 Mon Sep 17 00:00:00 2001
+From: Claude <claude@example.com>
+Date: Mon, 17 Aug 2026 20:57:31 +0000
+Subject: [PATCH 7/7] activity_main: Settings-Card im Scroll-Bereich vertikal
+ zentrieren statt oben andocken
+
+---
+ app/src/main/res/layout/activity_main.xml | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/app/src/main/res/layout/activity_main.xml b/app/src/main/res/layout/activity_main.xml
+index 57ccc97..eeee2db 100644
+--- a/app/src/main/res/layout/activity_main.xml
++++ b/app/src/main/res/layout/activity_main.xml
+@@ -57,7 +57,7 @@
+         app:layout_constraintEnd_toEndOf="parent"
+         app:layout_constraintStart_toStartOf="parent" />
+ 
+-    <!-- Einstellungen - scrollbar zwischen Header und Button -->
++    <!-- Einstellungen - scrollbar zwischen Header und Button, vertikal zentriert wenn Platz übrig ist -->
+     <androidx.core.widget.NestedScrollView
+         android:id="@+id/mainScrollView"
+         android:layout_width="0dp"
+@@ -71,6 +71,12 @@
+         app:layout_constraintStart_toStartOf="parent"
+         app:layout_constraintTop_toBottomOf="@+id/imageView">
+ 
++        <LinearLayout
++            android:layout_width="match_parent"
++            android:layout_height="match_parent"
++            android:gravity="center_vertical"
++            android:orientation="vertical">
++
+         <androidx.constraintlayout.widget.ConstraintLayout
+             android:layout_width="match_parent"
+             android:layout_height="wrap_content"
+@@ -346,6 +352,8 @@
+ 
+         </androidx.constraintlayout.widget.ConstraintLayout>
+ 
++        </LinearLayout>
++
+     </androidx.core.widget.NestedScrollView>
+ 
+ </androidx.constraintlayout.widget.ConstraintLayout>
+-- 
+2.43.0
+

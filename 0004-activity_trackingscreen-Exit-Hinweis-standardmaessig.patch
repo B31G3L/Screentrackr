@@ -1,0 +1,25 @@
+From d289cc0a42948eb9046a4b08b290025f2953921c Mon Sep 17 00:00:00 2001
+From: Claude <claude@example.com>
+Date: Mon, 17 Aug 2026 20:45:00 +0000
+Subject: [PATCH 4/5] activity_trackingscreen: Exit-Hinweis standardmaessig
+ gone (verhindert Anzeige in Main-Screen-Vorschau)
+
+---
+ app/src/main/res/layout/activity_trackingscreen.xml | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/app/src/main/res/layout/activity_trackingscreen.xml b/app/src/main/res/layout/activity_trackingscreen.xml
+index 37b0071..66da287 100644
+--- a/app/src/main/res/layout/activity_trackingscreen.xml
++++ b/app/src/main/res/layout/activity_trackingscreen.xml
+@@ -248,6 +248,7 @@
+         android:textColor="#FFFFFF"
+         android:textSize="14sp"
+         android:elevation="20dp"
++        android:visibility="gone"
+         app:layout_constraintBottom_toBottomOf="parent"
+         app:layout_constraintEnd_toEndOf="parent"
+         app:layout_constraintStart_toStartOf="parent"
+-- 
+2.43.0
+

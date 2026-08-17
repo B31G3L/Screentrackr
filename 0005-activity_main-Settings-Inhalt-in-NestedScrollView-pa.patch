@@ -1,0 +1,57 @@
+From 8fe2927ddf1235c041acb3ffe1617f15778e21a1 Mon Sep 17 00:00:00 2001
+From: Claude <claude@example.com>
+Date: Mon, 17 Aug 2026 20:48:32 +0000
+Subject: [PATCH 5/5] activity_main: Settings-Inhalt in NestedScrollView packen
+ (verhindert Cutoff/Overlap auf kleineren/anderen Bildschirmen)
+
+---
+ app/src/main/res/layout/activity_main.xml | 22 +++++++++++++++-------
+ 1 file changed, 15 insertions(+), 7 deletions(-)
+
+diff --git a/app/src/main/res/layout/activity_main.xml b/app/src/main/res/layout/activity_main.xml
+index f5e1262..a10bb26 100644
+--- a/app/src/main/res/layout/activity_main.xml
++++ b/app/src/main/res/layout/activity_main.xml
+@@ -26,18 +26,24 @@
+         app:layout_constraintStart_toStartOf="parent"
+         app:layout_constraintTop_toTopOf="parent" />
+ 
+-    <!-- Hauptinhalt - Vertikal zentriert -->
+-    <androidx.constraintlayout.widget.ConstraintLayout
++    <!-- Hauptinhalt - scrollbar, damit auf jeder Bildschirmgröße alles erreichbar ist -->
++    <androidx.core.widget.NestedScrollView
++        android:id="@+id/mainScrollView"
+         android:layout_width="0dp"
+-        android:layout_height="wrap_content"
+-        android:layout_marginHorizontal="24dp"
+-        android:maxWidth="400dp"
++        android:layout_height="0dp"
++        android:clipToPadding="false"
++        android:fillViewport="true"
+         app:layout_constraintBottom_toBottomOf="parent"
+         app:layout_constraintEnd_toEndOf="parent"
+         app:layout_constraintStart_toStartOf="parent"
+-        app:layout_constraintTop_toTopOf="parent"
+-        app:layout_constraintWidth_max="400dp">
++        app:layout_constraintTop_toTopOf="parent">
+ 
++        <androidx.constraintlayout.widget.ConstraintLayout
++            android:layout_width="match_parent"
++            android:layout_height="wrap_content"
++            android:layout_marginHorizontal="24dp"
++            android:paddingTop="24dp"
++            android:paddingBottom="24dp">
+         <!-- Logo -->
+         <ImageView
+             android:id="@+id/imageView"
+@@ -340,4 +346,6 @@
+ 
+     </androidx.constraintlayout.widget.ConstraintLayout>
+ 
++    </androidx.core.widget.NestedScrollView>
++
+ </androidx.constraintlayout.widget.ConstraintLayout>
+\ No newline at end of file
+-- 
+2.43.0
+

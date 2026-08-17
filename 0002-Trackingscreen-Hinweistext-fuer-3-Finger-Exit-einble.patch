@@ -1,0 +1,161 @@
+From 89b9f560a3d7a6b3454645cd7377247add2b42e4 Mon Sep 17 00:00:00 2001
+From: Claude <claude@example.com>
+Date: Mon, 17 Aug 2026 20:36:54 +0000
+Subject: [PATCH 2/2] Trackingscreen: Hinweistext fuer 3-Finger-Exit einblenden
+
+---
+ .../beigel/screenTracker/AppConstants.java    |  4 +++
+ .../beigel/screenTracker/Trackingscreen.java  | 29 +++++++++++++++++++
+ .../res/layout/activity_trackingscreen.xml    | 20 +++++++++++++
+ app/src/main/res/values-de/strings.xml        |  2 +-
+ app/src/main/res/values/strings.xml           |  2 +-
+ gradlew                                       |  0
+ 6 files changed, 55 insertions(+), 2 deletions(-)
+ mode change 100644 => 100755 gradlew
+
+diff --git a/app/src/main/java/com/beigel/screenTracker/AppConstants.java b/app/src/main/java/com/beigel/screenTracker/AppConstants.java
+index 9aabe79..d9773a5 100644
+--- a/app/src/main/java/com/beigel/screenTracker/AppConstants.java
++++ b/app/src/main/java/com/beigel/screenTracker/AppConstants.java
+@@ -81,6 +81,10 @@ public final class AppConstants {
+         public static final float GUIDELINE_RIGHT = 0.90f;
+         public static final float GUIDELINE_TOP = 0.05f;
+         public static final float GUIDELINE_BOTTOM = 0.95f;
++
++        // Exit-Hinweis (3-Finger-Tap Info) auf dem Tracking-Screen
++        public static final long EXIT_HINT_DISPLAY_DURATION = 4000L; // ms, bevor es ausblendet
++        public static final long EXIT_HINT_FADE_DURATION = 600L;     // ms für die Fade-Animation
+     }
+ 
+     // ========== MARKER DRAWABLES ==========
+diff --git a/app/src/main/java/com/beigel/screenTracker/Trackingscreen.java b/app/src/main/java/com/beigel/screenTracker/Trackingscreen.java
+index cca1003..53aa903 100644
+--- a/app/src/main/java/com/beigel/screenTracker/Trackingscreen.java
++++ b/app/src/main/java/com/beigel/screenTracker/Trackingscreen.java
+@@ -3,6 +3,8 @@ package com.beigel.screenTracker;
+ import android.animation.ValueAnimator;
+ import android.graphics.Color;
+ import android.os.Bundle;
++import android.os.Handler;
++import android.os.Looper;
+ import android.util.Log;
+ import android.view.GestureDetector;
+ import android.view.MotionEvent;
+@@ -50,6 +52,9 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
+     private int screenWidth;
+     private int screenHeight;
+ 
++    // Exit-Hinweis
++    private final Handler exitHintHandler = new Handler(Looper.getMainLooper());
++
+     @Override
+     protected void onCreate(Bundle savedInstanceState) {
+         super.onCreate(savedInstanceState);
+@@ -62,6 +67,7 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
+             initializeManagers();
+             setupFullscreen();
+             setupTracking();
++            showExitHint();
+ 
+             Log.d(TAG, "Trackingscreen erfolgreich initialisiert");
+         } catch (Exception e) {
+@@ -177,6 +183,28 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
+         }
+     }
+ 
++    /**
++     * Zeigt kurz den Hinweis, wie man das Tracking wieder verlässt (3-Finger-Tap),
++     * und blendet ihn danach automatisch aus
++     */
++    private void showExitHint() {
++        binding.exitHintText.setAlpha(1f);
++        binding.exitHintText.setVisibility(View.VISIBLE);
++
++        exitHintHandler.postDelayed(() -> {
++            if (binding == null) return;
++            binding.exitHintText.animate()
++                    .alpha(0f)
++                    .setDuration(AppConstants.UI.EXIT_HINT_FADE_DURATION)
++                    .withEndAction(() -> {
++                        if (binding != null) {
++                            binding.exitHintText.setVisibility(View.GONE);
++                        }
++                    })
++                    .start();
++        }, AppConstants.UI.EXIT_HINT_DISPLAY_DURATION);
++    }
++
+     // ========== GESTURE DETECTION ==========
+ 
+     @Override
+@@ -258,6 +286,7 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
+     protected void onDestroy() {
+         super.onDestroy();
+         try {
++            exitHintHandler.removeCallbacksAndMessages(null);
+             if (dynamicMarkerManager != null) {
+                 dynamicMarkerManager.cleanup();
+             }
+diff --git a/app/src/main/res/layout/activity_trackingscreen.xml b/app/src/main/res/layout/activity_trackingscreen.xml
+index eacc60b..37b0071 100644
+--- a/app/src/main/res/layout/activity_trackingscreen.xml
++++ b/app/src/main/res/layout/activity_trackingscreen.xml
+@@ -233,6 +233,26 @@
+ 
+     </androidx.constraintlayout.widget.ConstraintLayout>
+ 
++    <!-- Hinweis-Text: wie man das Tracking wieder verlässt -->
++    <TextView
++        android:id="@+id/exitHintText"
++        android:layout_width="wrap_content"
++        android:layout_height="wrap_content"
++        android:layout_marginBottom="48dp"
++        android:background="#99000000"
++        android:paddingStart="20dp"
++        android:paddingTop="12dp"
++        android:paddingEnd="20dp"
++        android:paddingBottom="12dp"
++        android:text="@string/instruction_tap_to_exit"
++        android:textColor="#FFFFFF"
++        android:textSize="14sp"
++        android:elevation="20dp"
++        app:layout_constraintBottom_toBottomOf="parent"
++        app:layout_constraintEnd_toEndOf="parent"
++        app:layout_constraintStart_toStartOf="parent"
++        tools:ignore="HardcodedText,TextContrastCheck" />
++
+     <!-- Separater Scroll-Marker Layer (für dynamische Marker) -->
+     <androidx.constraintlayout.widget.ConstraintLayout
+         android:id="@+id/scrollMarkerLayer"
+diff --git a/app/src/main/res/values-de/strings.xml b/app/src/main/res/values-de/strings.xml
+index 33d3b29..3c9bfc0 100644
+--- a/app/src/main/res/values-de/strings.xml
++++ b/app/src/main/res/values-de/strings.xml
+@@ -83,6 +83,6 @@
+     <string name="content_description_marker">Tracking-Marker</string>
+ 
+     <!-- Instructions -->
+-    <string name="instruction_tap_to_exit">Tippen zum Beenden des Trackings</string>
++    <string name="instruction_tap_to_exit">Mit 3 Fingern gleichzeitig berühren, um das Tracking zu beenden</string>
+     <string name="instruction_swipe_to_scroll">Wischen zum Scrollen der Marker</string>
+ </resources>
+\ No newline at end of file
+diff --git a/app/src/main/res/values/strings.xml b/app/src/main/res/values/strings.xml
+index b2310e9..58f8b57 100644
+--- a/app/src/main/res/values/strings.xml
++++ b/app/src/main/res/values/strings.xml
+@@ -83,6 +83,6 @@
+     <string name="content_description_marker">Tracking marker</string>
+ 
+     <!-- Instructions -->
+-    <string name="instruction_tap_to_exit">Tap anywhere to exit tracking</string>
++    <string name="instruction_tap_to_exit">Touch with 3 fingers at the same time to exit tracking</string>
+     <string name="instruction_swipe_to_scroll">Swipe to scroll markers</string>
+ </resources>
+\ No newline at end of file
+diff --git a/gradlew b/gradlew
+old mode 100644
+new mode 100755
+-- 
+2.43.0
+
