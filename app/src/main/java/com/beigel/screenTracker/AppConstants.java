@@ -81,6 +81,10 @@ public final class AppConstants {
         public static final float GUIDELINE_RIGHT = 0.90f;
         public static final float GUIDELINE_TOP = 0.05f;
         public static final float GUIDELINE_BOTTOM = 0.95f;
+
+        // Exit-Hinweis (3-Finger-Tap Info) auf dem Tracking-Screen
+        public static final long EXIT_HINT_DISPLAY_DURATION = 4000L; // ms, bevor es ausblendet
+        public static final long EXIT_HINT_FADE_DURATION = 600L;     // ms für die Fade-Animation
     }
 
     // ========== MARKER DRAWABLES ==========

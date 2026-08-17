@@ -83,6 +83,6 @@
     <string name="content_description_marker">Tracking-Marker</string>
 
     <!-- Instructions -->
-    <string name="instruction_tap_to_exit">Tippen zum Beenden des Trackings</string>
+    <string name="instruction_tap_to_exit">Mit 3 Fingern gleichzeitig berühren, um das Tracking zu beenden</string>
     <string name="instruction_swipe_to_scroll">Wischen zum Scrollen der Marker</string>
 </resources>

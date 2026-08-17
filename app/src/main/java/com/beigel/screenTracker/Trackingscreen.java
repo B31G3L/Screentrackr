@@ -3,6 +3,8 @@ package com.beigel.screenTracker;
 import android.animation.ValueAnimator;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -50,6 +52,9 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
     private int screenWidth;
     private int screenHeight;
 
+    // Exit-Hinweis
+    private final Handler exitHintHandler = new Handler(Looper.getMainLooper());
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,6 +67,7 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
             initializeManagers();
             setupFullscreen();
             setupTracking();
+            showExitHint();
 
             Log.d(TAG, "Trackingscreen erfolgreich initialisiert");
         } catch (Exception e) {
@@ -177,6 +183,28 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
         }
     }
 
+    /**
+     * Zeigt kurz den Hinweis, wie man das Tracking wieder verlässt (3-Finger-Tap),
+     * und blendet ihn danach automatisch aus
+     */
+    private void showExitHint() {
+        binding.exitHintText.setAlpha(1f);
+        binding.exitHintText.setVisibility(View.VISIBLE);
+
+        exitHintHandler.postDelayed(() -> {
+            if (binding == null) return;
+            binding.exitHintText.animate()
+                    .alpha(0f)
+                    .setDuration(AppConstants.UI.EXIT_HINT_FADE_DURATION)
+                    .withEndAction(() -> {
+                        if (binding != null) {
+                            binding.exitHintText.setVisibility(View.GONE);
+                        }
+                    })
+                    .start();
+        }, AppConstants.UI.EXIT_HINT_DISPLAY_DURATION);
+    }
+
     // ========== GESTURE DETECTION ==========
 
     @Override
@@ -258,6 +286,7 @@ public class Trackingscreen extends AppCompatActivity implements GestureDetector
     protected void onDestroy() {
         super.onDestroy();
         try {
+            exitHintHandler.removeCallbacksAndMessages(null);
             if (dynamicMarkerManager != null) {
                 dynamicMarkerManager.cleanup();
             }

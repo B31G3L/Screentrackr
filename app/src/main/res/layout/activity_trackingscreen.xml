@@ -233,6 +233,26 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <!-- Hinweis-Text: wie man das Tracking wieder verlässt -->
+    <TextView
+        android:id="@+id/exitHintText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="48dp"
+        android:background="#99000000"
+        android:paddingStart="20dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="12dp"
+        android:text="@string/instruction_tap_to_exit"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        android:elevation="20dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:ignore="HardcodedText,TextContrastCheck" />
+
     <!-- Separater Scroll-Marker Layer (für dynamische Marker) -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/scrollMarkerLayer"
